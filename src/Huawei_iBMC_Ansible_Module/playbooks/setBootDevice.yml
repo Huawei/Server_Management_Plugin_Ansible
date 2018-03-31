@@ -1,0 +1,21 @@
+---
+
+- hosts: myhosts
+  name:  set boot device 
+  gather_facts: False
+
+  # boot device:
+  #   Cd	CD ROM
+  #   Pxe	pxe
+  #   Floppy	Floppy
+  #   Hdd	hard disk device
+  #   BiosSetup	
+  #   None
+
+  tasks:
+
+
+  - name: set boot order
+    local_action: >
+       ibmc category=SetBootDevice command='Cd' ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}

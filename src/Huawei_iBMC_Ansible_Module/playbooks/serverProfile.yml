@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: import or export server profile
+  gather_facts: False
+
+# import or export; iBMC and BIOS profile path
+  vars:
+   command: 'export;/tmp/profile.xml'
+  tasks:
+
+  - name: import or export server profile
+    local_action: >
+       ibmc category=Profile command={{ command }} ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}

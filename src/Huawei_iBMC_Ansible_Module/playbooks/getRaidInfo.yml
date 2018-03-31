@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: get logic device info
+  gather_facts: no
+
+
+  tasks:
+
+
+  - name: get logic device info
+    local_action: >
+       ibmc category=GetRaidInfo command='RAID0' ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}
+

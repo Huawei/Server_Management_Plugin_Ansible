@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: update firm ware
+  gather_facts: no
+
+
+  tasks:
+
+
+  - name: update frimware 
+    local_action: >
+       ibmc category=UpdateFW command='nfs://192.168.2.241/NFSshare/1288HV5260.hpm' ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}
+

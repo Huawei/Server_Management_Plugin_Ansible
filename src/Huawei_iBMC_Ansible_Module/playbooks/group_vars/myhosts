@@ -1,0 +1,11 @@
+---
+
+# Here we define global variables for our server group, but if some servers
+# require custom values place these variables in /etc/ansible/hosts to override
+# for each individual host
+
+
+rootdir: /etc/ansible/ansible_ibmc/report             # local directory where all results are placed
+reportdir: /etc/ansible/ansible_ibmc/report       
+csvformat: True 			                      # True if we want results to be comma-separated
+

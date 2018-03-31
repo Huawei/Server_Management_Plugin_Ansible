@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osInstallInfo>
+  <ostype>Windows Server 2012 ServerStandard</ostype>
+  <cdkey></cdkey>
+  <password>huawei123</password>
+  <hostname></hostname>
+  <ownername></ownername>
+  <language>en-US</language>
+  <orgname></orgname>
+  <position>disk</position>
+  <partitions>
+      <partition>C:NTFS:50000|D:NTFS:1</partition>
+  </partitions>
+  <software>ibma</software>  
+</osInstallInfo>

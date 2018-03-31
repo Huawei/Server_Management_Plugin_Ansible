@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osInstallInfo>
+  <ostype>VMware ESXi 6.0.0 </ostype>
+  <cdkey></cdkey>
+  <password>huawei123</password>
+  <hostname></hostname>
+  <ownername></ownername>
+  <orgname></orgname>
+  <position>disk</position>
+  <partitions>
+      <partition></partition>
+  </partitions>
+  <software>ibma</software>
+</osInstallInfo>

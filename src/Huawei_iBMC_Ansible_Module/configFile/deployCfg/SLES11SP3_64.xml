@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osInstallInfo>
+  <ostype>SUSE</ostype>
+  <password>huawei123</password>
+  <position>disk</position>
+  <partitions>
+	<partition>swap:swap:2000|/:ext3:1</partition>
+  </partitions>
+</osInstallInfo>

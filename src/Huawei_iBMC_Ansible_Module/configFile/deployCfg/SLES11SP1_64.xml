@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osInstallInfo>
+  <ostype>SUSE Linux Enterprise 11 SP1 x64</ostype>
+  <cdkey/>
+  <password>huawei123</password>
+  <hostname/>
+  <ownername/>
+  <orgname/>
+  <position>usb</position>
+  <partitions>
+	<partition>swap:swap:500|/:ext3:3000|abc:reiser:1</partition>
+  </partitions>
+</osInstallInfo>

@@ -1,0 +1,14 @@
+---
+
+- hosts: myhosts
+  name:  config bmc ip 
+  gather_facts: False
+
+  tasks:
+
+  # config ibmc ip including IP address;Subnet mask;Gateway, must be separated by semicolons(;)!
+
+  - name: config bmc ip
+    local_action: >
+       ibmc category=ConfigBMC command=';255.255.0.0;192.168.0.1' ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}

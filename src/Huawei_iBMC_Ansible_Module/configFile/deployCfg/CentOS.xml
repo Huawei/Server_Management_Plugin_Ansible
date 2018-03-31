@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osInstallInfo>
+  <ostype>Red Hat 6U1 x64</ostype>
+  <cdkey/>
+  <password>huawei123</password>
+  <hostname/>
+  <ownername/>
+  <orgname/>
+  <position>disk</position>
+  <partitions>
+    <partition>swap:swap:10000|/:ext3:1</partition>
+  </partitions>
+  <mode>1</mode>
+</osInstallInfo>

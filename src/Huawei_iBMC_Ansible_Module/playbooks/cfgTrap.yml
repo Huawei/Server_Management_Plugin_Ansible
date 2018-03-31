@@ -1,0 +1,16 @@
+---
+
+- hosts: myhosts
+  name: config snmp trap 
+  gather_facts: no
+  vars:
+   user: 'root'
+
+  tasks:
+
+
+  - name: config snmp
+    local_action: >
+       ibmc category=CfgSnmpTrap command="{{ user }}" ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}
+
