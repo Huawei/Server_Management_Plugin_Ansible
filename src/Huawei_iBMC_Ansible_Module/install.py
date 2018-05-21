@@ -28,14 +28,14 @@ def copyFiles(sourceDir, targetDir, overWrite):
         targetF = os.path.join(targetDir, f)
 
         if os.path.isfile(sourceF):   
-            #创建目录   
+            #create dirs
             if not os.path.exists(targetDir):
                 os.makedirs(targetDir)
             copyFileCounts += 1
                
-            #文件不存在，或者存在但是大小不同，覆盖
+            #overwrite when the files is not exist or had difference
             if not os.path.exists(targetF) or (os.path.exists(targetF) and overWrite == 'Y'):
-                #2进制文件
+                # binary file
                 open(targetF, "wb").write(open(sourceF, "rb").read()) 
                 print u"%s %s copy successfully " %(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time())), targetF)   
             else: 
@@ -51,16 +51,18 @@ if __name__ == "__main__":
         psyco.profile()
     except ImportError:
         pass
-
+        
+    overWrite = ''
+    
     if os.path.exists(huawei_ibmc_path + '/module') or os.path.exists(huawei_ibmc_path + '/scripts'):
         print "Please remove Huawei-iBMC-Ansible_Modules first!"
         exit(1)
 
-    overWrite = raw_input("Do you want to over write ansible configuration(Y/N):")
-    if overWrite.upper() != 'Y' and overWrite.upper() != 'N':
-        print "Please input Y or N !"
-        exit(1)
-
+    if os.path.exists(huawei_ibmc_path + '/configFile') or os.path.exists(huawei_ibmc_path + '/playbooks'):
+        overWrite = raw_input("Do you want to over write ansible configuration(Y/N):")
+        if overWrite.upper() != 'Y' and overWrite.upper() != 'N':
+            print "Please input Y or N !"
+            exit(1)
     copyFiles(os.getcwd(), huawei_ibmc_path, overWrite.upper())
 
     if not os.path.exists(huawei_ibmc_path + '/log'):

@@ -4,8 +4,28 @@
 # require custom values place these variables in /etc/ansible/hosts to override
 # for each individual host
 
+# input local directory where all results are placed
+rootdir: /etc/ansible/ansible_ibmc/report
+reportdir: /etc/ansible/ansible_ibmc/report
+        
+# input True if we want the inventory query result to be comma-separated
+csvformat: True
 
-rootdir: /etc/ansible/ansible_ibmc/report             # local directory where all results are placed
-reportdir: /etc/ansible/ansible_ibmc/report       
-csvformat: True 			                      # True if we want results to be comma-separated
+# input the huawei ibmc user and password
+ibmcuser: "ibmc_user"
+ibmcpswd: "ibmc_pwd"
 
+# input the sftp user and password when we need to use the sftp service
+sftpuser: "sftp_user"
+sftppswd: "sftp_pwd"
+
+# input the cifs user and password when we need to use the cifs service
+cifsuser: "cifs_user"
+cifspswd: "cifs_pwd"
+
+
+# if you select SNMP Trap mode as V1 or V2C, you need to set the community name
+community: "community_name"
+# input the scp user and password when we need to use the scp service
+scpuser: "scp_user"
+scppswd: "scp_pwd"

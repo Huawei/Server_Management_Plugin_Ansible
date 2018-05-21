@@ -28,23 +28,10 @@ from cfgBmc import *
 from powerManage import *
 
 global token
-
+from commonLoger import *
 LOG_FILE = "/etc/ansible/ansible_ibmc/log/cfgRaidLog.log"
 REPORT_FILE = "/etc/ansible/ansible_ibmc/report/cfgRaidReport.log"
-
-log_hander = logging.handlers.RotatingFileHandler(LOG_FILE,maxBytes = 1024*1024,backupCount = 5)  
-report_hander = logging.handlers.RotatingFileHandler(REPORT_FILE,maxBytes = 1024*1024,backupCount = 5)  
-fmt = logging.Formatter("[%(asctime)s %(levelname)s ] (%(filename)s:%(lineno)d)- %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-log_hander.setFormatter(fmt)
-report_hander.setFormatter(fmt)
-
-log = logging.getLogger('cfgRaidLog')
-log.addHandler(log_hander)
-log.setLevel(logging.INFO)  
-
-report = logging.getLogger('cfgRaidReport')
-report.addHandler(report_hander)  
-report.setLevel(logging.INFO)
+log, report = ansibleGetLoger(LOG_FILE,REPORT_FILE,"cfgRaidReport")
 
 
 '''
@@ -96,10 +83,10 @@ def getTaskStatus(ibmc, taskId, root_uri):
 # @date: 2017.10.31
 #==========================================================================
 '''
-def creatLD(ibmc, playload, root_uri, system_uri):
+def creatLD(ibmc, playload, root_uri, system_uri,LDId):
     token = getToken()
     headers = {'content-type': 'application/json','X-Auth-Token':token}
-    uri = root_uri + system_uri + "/Storages/RAIDStorage0/Volumes"
+    uri = root_uri + system_uri + "/Storages/%s"%LDId
     payload = playload 
     try:
         r = request('POST',resource=uri,headers=headers,data=payload,tmout=30,ip=ibmc['ip'])
@@ -132,66 +119,175 @@ def deleteLD(ibmc,root_uri, vol_uri):
         raise
 
     return r
-
+'''
+#==========================================================================
+# @Method: get all storgeInfo
+# @command: 
+# @Param:  ibmc url
+# @date: 2018.4.23
+#==========================================================================
+'''
+def getAllStorge(ibmc, root_uri,system_uri):
+    raidInfo_uri = system_uri + "/Storages"
+    token = getToken()
+    result = [] 
+    headers = {'content-type': 'application/json','X-Auth-Token':token}
+    uri = root_uri + raidInfo_uri
+    try:
+        r = request('GET',resource=uri,headers=headers,data=None,tmout=30,ip=ibmc['ip'])
+        if r.status_code == 200:
+            r = r.json()
+            result = r['Members']
+    except Exception,e:
+        log.error(ibmc['ip'] + " -- get raid info failed!error info:%s " %str(e))
+        raise
+    return result 
+    
 
 '''
 #==========================================================================
-# @Method: delete all raid
+# @Method: delete a Ld
 # @command: 
 # @Param:  ibmc url
 # @date: 2017.11.01
 #==========================================================================
 '''
-def deletAllLd(ibmc, root_uri, system_uri):
-
-    members = getRaidInfo(ibmc, root_uri, system_uri)
-    log.info(ibmc['ip'] + " -- delete Ld:%s" %str(members))
-    if len(members) > 0: 
-        try:
-            for member in members:
-                 ret = deleteLD(ibmc, root_uri, member[u'@odata.id'])
-                 log.info(ibmc['ip'] + " -- delete ld:%s" %member[u'@odata.id'])
-                 ret = ret.json()
-                 if ret is not None:
-                     taskId = ret[u'@odata.id']
-                     status = ret[u'TaskState']
-                     while 1:
-                         taskResult = getTaskStatus(ibmc, taskId, root_uri)
-                         if taskResult[0].find("Running") != -1:
-                             continue
-                         elif taskResult[0].find("Successful") != -1:
-                             log.info(ibmc['ip'] + " -- the %s delete successful!" %str(member[u'@odata.id']))
-                             time.sleep(20)
-                             break 
-                         else:
-                             log.error(ibmc['ip'] + " -- delete %s failed:%s" %(str(member[u'@odata.id']),taskResult[1]))
-                             return False
-                 else:
-                     logg.error("delete all logic disk failed:%s" %taskResult[1])
-                     return False
-            log.info(ibmc['ip'] + " -- all of logic device has be delete! \n")
-        except Exception,e:
-            log.exception(ibmc['ip'] + " -- error info:%s" %str(e))
-            raise
+def deletALD(LDID,ibmc,root_uri,system_uri):
+    rets = {'result':True,'msg': ''}
+    token = getToken()
+    headers = {'content-type': 'application/json','X-Auth-Token':token}
+    uri = root_uri+system_uri + "/Storages/%s/Volumes/%s"%(LDID.split("/")[0],LDID.split("/")[1])
+    try :
+        r = request('DELETE',resource=uri,headers=headers,data=None,tmout=30,ip=ibmc['ip'])
+        if r.status_code == 202:
+            temdic=r.json()
+            taskId = temdic[u'@odata.id']  
+            log.info("%s %s send delete LD command success"%( str(ibmc["ip"]),LDID ))
+        else :
+            rets["result"] = False
+            rets["msg"]= rets["msg"]+"%s del  %s   failed  "%(str(ibmc["ip"]),LDID)
+            log.info("%s %s  delete LD failed"%( str(ibmc["ip"]),LDID ) +"errorInfo:"+str(r.json()) )
+            report.info("%s %s  delete LD failed"%( str(ibmc["ip"]),LDID ))
+            return rets 
+    except Exception, e:
+        rets["result"] = False
+        rets["msg"]= rets["msg"]+"%s del  %s   failed exception "%(str(ibmc["ip"]),LDID)
+        log.error(ibmc['ip'] + " -- deletALd  error:%s" %str(e))
+        return rets 
+    for i in range(20):
+        taskResult = getTaskStatus(ibmc, taskId, root_uri)
+        if taskResult[0].find("Running") != -1:
+            time.sleep(1)
+            continue
+        elif taskResult[0].find("Successful") != -1:
+            rets["result"] = True
+            rets["msg"]= rets["msg"]+"%s del  %s  sucessful  "%(str(ibmc["ip"]),LDID)
+            log.info(ibmc['ip'] + " -- the %s delete successful!" %str(LDID))
+            report.info(ibmc['ip'] + " -- the %s delete successful!" %str(LDID))
+            time.sleep(20)
+            break 
+        else:
+            rets["result"] = False
+            rets["msg"]= rets["msg"]+"%s del  %s   failed  "%(str(ibmc["ip"]),LDID)
+            log.error(ibmc['ip'] + " -- delete %s failed:%s" %(LDID,taskResult[1]))
+            report.error(ibmc['ip'] + " -- delete %s failed:%s" %(LDID,taskResult[1]))
+            break
+    return rets
+'''
+#==========================================================================
+# @Method: delete all Ld
+# @command: 
+# @Param:  ibmc url
+# @date: 2017.11.01
+#==========================================================================
+'''
+def deletAllLd(storgeId,ibmc, root_uri, system_uri):
+    rets = {'result':True,'msg': ''}
+    #del all Ld in all storges 
+    if  storgeId =="ALL":
+        storgelist = getAllStorge(ibmc, root_uri,system_uri)
+        if storgelist != [] and storgelist is not None:
+            resultList=[]
+            for eachinfo in storgelist:
+                if not "RAIDStorage" in eachinfo["@odata.id"]:
+                    continue
+                ret=deletAllLd(eachinfo["@odata.id"].split("/")[6],ibmc, root_uri, system_uri)
+                resultList.append(ret)
+        if resultList==[]:
+           rets["result"]=True
+           rets['msg']= ibmc['ip']+" no storage" 
+           report.info(ibmc['ip']+ " no storage" )            
+           return rets
+        for eachResult in  resultList:
+            if eachResult["result"] == False:
+                rets["result"] = False
+            rets["msg"]= rets["msg"] + eachResult['msg']+'\n'
+            report.info(ibmc['ip']+ "del storage result:" + rets["msg"] )
+        return rets            
+    #del all Ld in the assigned storgeId 
     else:
-        log.info(ibmc['ip'] + " -- there are no logic device create before!")
-        return True
+        members = getAllLD(storgeId,ibmc, root_uri, system_uri)
+        log.info(ibmc['ip'] + " -- delete Ld:%s" %str(members))
+        if len(members) > 0: 
+            try:
+                rets["result"] =True
+                rets["msg"] =''
+                for member in members:
+                    ret = deleteLD(ibmc, root_uri, member[u'@odata.id'])
+                    log.info(ibmc['ip'] + " -- delete ld:%s" %member[u'@odata.id'])
+                    ret = ret.json()
+                    if ret is not None:
+                        taskId = ret[u'@odata.id']
+                        status = ret[u'TaskState']
+                        for i in range(20):
+                            taskResult = getTaskStatus(ibmc, taskId, root_uri)
+                            if taskResult[0].find("Running") != -1:
+                                time.sleep(1)
+                                continue
+                            elif taskResult[0].find("Successful") != -1:
+                                rets["msg"]= rets["msg"]+"%s del  %s   successful  "%(str(ibmc["ip"]), member[u'@odata.id'] )+"\n"
+                                log.info(ibmc['ip'] + " -- the %s delete successful!" %str(member[u'@odata.id']))
+                                report.info(ibmc['ip']+ "del storage result:" + rets["msg"] )
+                                time.sleep(20)
+                                break 
+                            else:
+                                rets["result"] = False
+                                rets["msg"]= rets["msg"]+"%s del  %s   failed  "%(str(ibmc["ip"]), member[u'@odata.id'] )+"\n"
+                                log.error(ibmc['ip'] + " -- delete %s failed:%s" %(str(member[u'@odata.id']),taskResult[1]))
+                                report.error(ibmc['ip'] + " -- delete %s failed:%s" %(str(member[u'@odata.id']),taskResult[1]))
+                                break
+                    else:
+                        rets["result"] = False
+                        rets["msg"]="%s del  %s   failed  "%(str(ibmc["ip"]), member[u'@odata.id'] )
+                        log.error("delete all logic disk failed:%s" %taskResult[1])
+                        report.error("delete all logic disk failed:%s" %taskResult[1])
+                        return rets
+                log.info(ibmc['ip'] + " -- all of logic device has be delete! \n")
+            except Exception,e:
+                rets["result"] = False
+                log.exception(ibmc['ip'] + " -- error info:%s" %str(e))
+        else:
+            rets["result"] = True
+            rets["msg"] = ibmc['ip']+"%s there are no logic device create before!"%(storgeId)
+            log.info(ibmc['ip'] + " %s -- there are no logic device create before!"%(storgeId))
+            report.info(ibmc['ip'] + " %s -- there are no logic device create before!"%(storgeId))
+            return rets
+        return rets    
 
-    return True
+
 
 '''
 #==========================================================================
-# @Method: get raid info 
+# @Method: get ld
 # @command: 
 # @Param: ibmc url
 # @date: 2017.11.01
 #==========================================================================
 '''
-def getRaidInfo(ibmc, root_uri, system_uri):
-    raidInfo_uri = system_uri + "/Storages/RAIDStorage0/Volumes"
+def getAllLD(storgeId,ibmc, root_uri, system_uri):
+    raidInfo_uri = system_uri + "/Storages/%s/Volumes"%storgeId
     token = getToken()
     result = [] 
- 
     headers = {'content-type': 'application/json','X-Auth-Token':token}
     uri = root_uri + raidInfo_uri
     try:
@@ -245,6 +341,99 @@ def setBootEnable(ibmc, ld):
     return result
 
 
+'''
+#==========================================================================
+# @Method: config raid
+# @command: 
+# @Param:  ibmc root_uri, system_uri, LDID,playload
+# @date: 2017.10.31
+#==========================================================================
+'''
+def modifyARaid(ibmc, root_uri, system_uri, LDID,playload):
+    ret = {'result':True,'msg': ''}
+    uri = root_uri + system_uri + "/Storages"+"/%s"%LDID
+    Etag = getEtag(ibmc,uri)
+    token = getToken() 
+    headers = {'content-type': 'application/json','X-Auth-Token':token,'If-Match':Etag}
+    r = request('PATCH',resource=uri,headers=headers,data=playload,tmout=30,ip=ibmc['ip'])
+    if r.status_code == 200:
+        ret["result"] = True
+        ret["msg"] = uri+"modifyARaid successlly"
+        return ret 
+    else:
+        ret["result"] = False
+        ret["msg"] = uri + "modifyARaid failed"
+        log.error( str(ibmc['ip']) + ret["msg"] + " error msg:"+str(r.json()) )
+        return ret
+'''
+#==========================================================================
+# @Method: config raid by configfile
+# @command: 
+# @Param: configfile ibmc  root_uri, system_uri
+# @date: 2017.10.31
+#==========================================================================
+'''
+def modifyRaid( configfile ,ibmc, root_uri, system_uri):
+    ret = {'result':True,'msg': ''}
+    #before config raid, make sure x86 is power on state!
+    powerState = managePower('PowerState', ibmc, root_uri, system_uri)
+    log.info(ibmc['ip'] + " -- power state:%s" %str(powerState))
+    if powerState.find("On") == -1:
+        log.error(ibmc['ip'] + " -- the system is poweroff, make sure the system is power on , wait 5 mins and try it again! \n")
+        report.error(ibmc['ip'] + " -- the system is poweroff, make sure the system is power on , wait 5 mins and try it again! \n")
+        ret['result'] = False
+        ret['msg'] = "the system is poweroff, make sure the system is power on , wait 5 mins and try it again!"
+        return ret
+
+    config=None
+    try:
+        config = open(configfile, 'r')
+        configDic = json.load(config)
+    except Exception ,e:    
+        log.error(ibmc['ip'] + " -- read config file failed! error info:%s" %str(e))
+        report.info(ibmc['ip'] + " --read config file failed! error info:%s" %str(e))
+        raise
+    finally:
+        if  config is not None :
+            config.close()             
+    resultList=[]
+
+    for eachConfig in configDic["ldlist"] :
+        
+        if eachConfig == {} or eachConfig ==None :
+            continue 
+        try :
+            ldid= eachConfig["LDID"]
+            playload= eachConfig["LDConfig"]
+            tmpDic = { ldid : "failed"}
+        except Exception,e:
+            log.error(ibmc['ip'] + " -- pares config file failed! error info:%s" %str(e))
+            report.info(ibmc['ip'] + " --pares config file failed! error info:%s" %str(e))
+            tmpDic[ eachConfig["LDID"] ] = "failed"  
+            resultList.append(tmpdic)     
+
+        r= modifyARaid(ibmc, root_uri, system_uri, ldid,playload)
+        if r["result"] == True:
+            tmpDic[ldid]="success"
+            resultList.append(tmpDic)
+            time.sleep(20)
+        else:
+            tmpDic[ldid]="failed"
+            resultList.append(tmpDic) 
+            log.error( str(ibmc["ip"]) + " modify raid config error Ldid: "+ str(ldid))
+    #pares finally result
+    for eachResult in resultList:
+        if "failed" in eachResult.values():
+            ret['result'] = False
+            ret['msg'] =str(ibmc["ip"]) +" modify raid failed ,result :"+str(resultList)
+            log.error(str(ibmc["ip"]) +" modify raid failed ,result :"+str(resultList))
+            report.error(str(ibmc["ip"]) +" modify raid failed ,result :"+str(resultList))
+            return ret
+    ret['result'] = True
+    ret['msg'] = str(ibmc["ip"]) + " modify raid successlly ,result :"+str(resultList)
+    log.info(str(ibmc["ip"]) + " modify raid successlly ,result :"+str(resultList))
+    report.info( str(ibmc["ip"]) + " modify raid successlly ,result :"+str(resultList))
+    return  ret 
 
 '''
 #==========================================================================
@@ -254,7 +443,7 @@ def setBootEnable(ibmc, ld):
 # @date: 2017.10.31
 #==========================================================================
 '''
-def cfgRaid(filepath, ibmc, root_uri, system_uri):
+def cfgRaid(configfile, ibmc, root_uri, system_uri):
     ret = {'result':True,'msg': ''}
     #before config raid, make sure x86 is power on state!
     powerState = managePower('PowerState', ibmc, root_uri, system_uri)
@@ -267,157 +456,115 @@ def cfgRaid(filepath, ibmc, root_uri, system_uri):
         return ret
 
     #parse ini file and get image config file
-    config = ConfigParser.ConfigParser()
-    config.read(filepath)
-
-    ForceCreate = config.get("config","ForceCreate")
-    CapacityBytes = config.get("config","CapacityBytes")
-    OptimumIOSizeBytes = config.get("config","OptimumIOSizeBytes")
-    CreateCacheCadeFlag = config.get("config","CreateCacheCadeFlag")
-    Drives = config.get("config","Drives")
-    VolumeRaidLevel = config.get("config","VolumeRaidLevel")
-    VolumeName = config.get("config","VolumeName")
-    DefaultReadPolicy = config.get("config","DefaultReadPolicy")
-    DefaultWritePolicy = config.get("config","DefaultWritePolicy")
-    DefaultCachePolicy = config.get("config","DefaultCachePolicy")
-    SpanNumber = config.get("config","SpanNumber")
-    AccessPolicy = config.get("config","AccessPolicy")
-    DriveCachePolicy = config.get("config","DriveCachePolicy")
-    InitializationMode = config.get("config","InitializationMode")
-    BootEnable = config.get("config","BootEnable")
-
-    #delete all ld,else sleep 20s to avoid constinous config raid problem
-    if ForceCreate.find('Y') != -1:
-        result = deletAllLd(ibmc, root_uri, system_uri)
-        if result == False:
-            ret['result'] = False
-            ret['msg'] = "may be the raid card does not support this option!"
-            return ret
-    else:
-        time.sleep(20)
-    
-    HuaweiDict = {} 
-    if CreateCacheCadeFlag != "":
-        HuaweiDict['CreateCacheCadeFlag'] = bool(string.atoi(CreateCacheCadeFlag))
-    if Drives != "":
-        Drives = Drives.split(',')
-        diskArr = []
-        for Drive in Drives:
-             diskArr.append(string.atoi(Drive))
-        HuaweiDict['Drives'] = diskArr 
-    if VolumeRaidLevel != "":
-        HuaweiDict['VolumeRaidLevel'] = VolumeRaidLevel
-    if VolumeName != "":
-        HuaweiDict['VolumeName'] = VolumeName
-    if DefaultReadPolicy != "":
-        HuaweiDict['DefaultReadPolicy'] = DefaultReadPolicy
-    if DefaultWritePolicy != "":
-        HuaweiDict['DefaultWritePolicy'] = DefaultWritePolicy
-    if DefaultCachePolicy != "":
-        HuaweiDict['DefaultCachePolicy'] = DefaultCachePolicy
-    if SpanNumber != "":
-        SpanNumber = string.atoi(SpanNumber)
-        HuaweiDict['SpanNumber'] = SpanNumber
-    if AccessPolicy != "":
-        HuaweiDict['AccessPolicy'] = AccessPolicy
-    if DriveCachePolicy != "":
-        HuaweiDict['DriveCachePolicy'] = DriveCachePolicy
-    if InitializationMode != "":
-        HuaweiDict['InitializationMode'] = InitializationMode
-
-    oemDict = {}
-    oemDict['Huawei'] = HuaweiDict
-
-    playloadDict = {}
-   # if CapacityBytes != "":
-   #     playloadDict['CapacityBytes'] = CapacityBytes
-    if OptimumIOSizeBytes != "":
-        OptimumIOSizeBytes = string.atoi(OptimumIOSizeBytes)
-        playloadDict['OptimumIOSizeBytes'] = OptimumIOSizeBytes
-    if HuaweiDict is not None:
-        playloadDict['Oem'] = oemDict
- 
-    taskId = ''
-    status = ''
+    config=None 
     try:
-        #sleep 20s
-        loopCreate1 = 0
-        loopCreate2 = 0
-        loopBootEnable = 0
-        time.sleep(20)
-        log.info("playload:%s , uri:%s" %(str(playloadDict),root_uri + system_uri))
-        r = creatLD(ibmc, playloadDict, root_uri, system_uri)
-
-        if r.status_code == 202:
-            result = r.json()
-            taskId = result[u'@odata.id']
-            status = result[u'TaskState']
-            while 1:
-                 log.info("taskId:%s" %(str(taskId)))
-                 taskResult = getTaskStatus(ibmc, taskId, root_uri)
-                 if taskResult[0].find("Running") != -1:
-                     time.sleep(1)
-                     continue
-                 elif taskResult[0].find("Successful") != -1:
-                     if BootEnable == 'Y':
-                         log.info(ibmc['ip'] + " -- create %s successful! \n" %VolumeRaidLevel)
-                         report.info(ibmc['ip'] + " -- create %s successful!" %VolumeRaidLevel )
-                         time.sleep(20)
-                         result = setBootEnable(ibmc, taskResult[1])
-                         # to fix windows create ld failed that after remove ld and then system reboot
-                         while loopBootEnable <= 20 and result != True:
-                             time.sleep(20)
-                             result = setBootEnable(ibmc, taskResult[1])
-                             loopBootEnable += 1
-                             log.info(ibmc['ip'] + " -- loopBootEnable:%s" %str(loopBootEnable))
-                         if result == True:
-                             log.info(ibmc['ip'] + " -- set %s as boot enable successful!\n" %VolumeRaidLevel)
-                             report.info(ibmc['ip'] + " -- set %s as boot enable successful!" %VolumeRaidLevel)
-                             ret['result'] = True
-                             ret['msg'] = "Successful"
-                             return ret
-
-                         else:
-                             log.info(ibmc['ip'] + " -- set %s as boot enable failed! %s" %(VolumeRaidLevel ,taskResult[1]) )
-                             report.info(ibmc['ip'] + " -- set %s as boot enable failed! %s" %(VolumeRaidLevel ,taskResult[1]) )
-                             ret['result'] = False
-                             ret['msg'] = "set " + VolumeRaidLevel + " as boot enable failed!" + taskResult[1]
-                             return ret
-                     else:
-                         log.info(ibmc['ip'] + " -- create %s successful! \n" %VolumeRaidLevel)
-                         report.info(ibmc['ip'] + " -- create %s successful! " %VolumeRaidLevel)
-                         ret['result'] = True
-                         ret['msg'] = "Successful"
-                         return ret
-
-                 else:
-                     if loopCreate2 <= 20:
-                         time.sleep(20)
-                         log.info("playload:%s , uri:%s" %(str(playloadDict),root_uri + system_uri))
-                         result = creatLD(ibmc, playloadDict, root_uri, system_uri)
-                         result = result.json()
-                         taskId = result[u'@odata.id']
-                         loopCreate2 += 1
-                         log.info(ibmc['ip'] + " -- loopCreate2:%d" %loopCreate2)
-                     else: 
-                         log.info(ibmc['ip'] + " -- create %s failed! %s" %(VolumeRaidLevel,taskResult[1]))
-                         report.info(ibmc['ip'] + " -- create %s failed! %s" %(VolumeRaidLevel,taskResult[1]))
-                         ret['result'] = False
-                         ret['msg'] = "create " + VolumeRaidLevel + " failed!" + taskResult[1]
-                         return ret
-                 
-        else:
-            log.error(ibmc['ip'] + " -- create  %s failed! error info:%s" %(VolumeRaidLevel, str(result.json())))
-            report.error(ibmc['ip'] + " -- create  %s failed! error info:%s" %(VolumeRaidLevel, str(result.json())))
-            ret['result'] = False
-            ret['msg'] = "Create logic device failed!"
-            return ret
-
-    except Exception,e:
-        log.error(ibmc['ip'] + " -- create logic device failed! error info:%s" %str(e))
-        report.info(ibmc['ip'] + " -- create logicv device failed! error info:%s" %str(e))
+        config = open(configfile, 'r')
+        configDic = json.load(config)
+    except Exception ,e:    
+        log.error(ibmc['ip'] + " -- read config file failed! error info:%s" %str(e))
+        report.info(ibmc['ip'] + " --read config file failed! error info:%s" %str(e))
         raise
+    finally:
+        if  config is not None :
+            config.close()    
+    resultList=[]
 
+    for eachConfig in configDic["LDlist"] :
+        if eachConfig =={} or eachConfig is None:
+            continue
+        tmpdic={eachConfig["RAIDID"]:"failed"}    
+        try :    
+            LdId=  eachConfig["RAIDID"]  
+            if LdId.split("/")[0] =='':
+                storgeId=LdId.split("/")[1]
+            else:
+                storgeId=LdId.split("/")[0]
+            playloadDict= eachConfig["configDic"]  
+            
+        except Exception,e:
+            log.error(ibmc['ip'] + " -- pares config file failed! error info:%s" %str(e))
+            report.info(ibmc['ip'] + " --pares config file failed! error info:%s" %str(e))
+            tmpdic[ eachConfig["RAIDID"] ] = "failed"  
+            resultList.append(tmpdic)
+
+    
+        taskId = ''
+        status = ''
+        try:
+            #sleep 20s
+            loopCreate1 = 0
+            loopCreate2 = 0
+            loopBootEnable = 0
+            time.sleep(20)
+            log.info("playload:%s , uri:%s" %(str(playloadDict),root_uri + system_uri))
+            r = creatLD(ibmc, playloadDict, root_uri, system_uri,LdId)
+            if r.status_code == 202:
+                getResultTimes=0               
+                result = r.json()
+                taskId = result[u'@odata.id']
+                status = result[u'TaskState']
+                while 1:
+                    if getResultTimes >60 :
+                         break
+                    log.info("taskId:%s" %(str(taskId)))
+                    taskResult = getTaskStatus(ibmc, taskId, root_uri)
+                    getResultTimes =getResultTimes + 1
+                    if taskResult[0].find("Running") != -1:
+                        time.sleep(1)
+                        continue
+                    elif taskResult[0].find("Successful") != -1:
+                        tmpdic[ eachConfig["RAIDID"] ] = "success"  
+                        resultList.append(tmpdic)
+                        log.info(ibmc['ip'] + " -- create %s successful! \n" %eachConfig["RAIDID"])
+                        break      
+                    else:
+                        if loopCreate2 <= 10:
+                            time.sleep(20)
+                            log.info("playload:%s , uri:%s" %(str(playloadDict),root_uri + system_uri))
+                            result = creatLD(ibmc, playloadDict, root_uri, system_uri,LdId)
+                            getResultTimes=0
+                            result = result.json()
+                            taskId = result[u'@odata.id']
+                            loopCreate2 += 1
+                            log.info(ibmc['ip'] + " -- loopCreate2:%d" %loopCreate2)
+                        else: 
+                            log.error(ibmc['ip'] + " -- create %s failed! %s" %(eachConfig["RAIDID"],taskResult[1]))
+                            tmpdic[ eachConfig["RAIDID"] ] = "failed"  
+                            resultList.append(tmpdic)
+                            break        
+            else:
+                log.error(ibmc['ip'] + " -- create  %s failed! error info:%s" %(eachConfig["RAIDID"], str(r.json())))
+                tmpdic[ eachConfig["RAIDID"] ] = "failed"  
+                resultList.append(tmpdic) 
+                continue
+        except Exception,e:
+            log.error(ibmc['ip'] + " -- create logic device failed! error info:%s" %str(e))
+            tmpdic[ eachConfig["RAIDID"] ] = "failed"  
+            resultList.append(tmpdic) 
+    #pares finally result
+    for eachResult in resultList:
+        if "failed" in eachResult.values():
+            ret['result'] = False
+            ret['msg'] =ibmc['ip'] +" cfgRaid failed ,result :"+str(resultList)
+            log.error(ibmc['ip'] +" cfgRaid failed ,result :"+str(resultList))
+            report.error(ibmc['ip'] +" cfgRaid failed ,result :"+str(resultList))
+            return ret
+    ret['result'] = True
+    ret['msg'] =ibmc['ip'] +" cfgRaid successlly ,result :"+str(resultList)
+    log.info(ibmc['ip'] +" cfgRaid successlly ,result :"+str(resultList))
+    report.info(ibmc['ip'] +" cfgRaid successlly ,result :"+str(resultList))
+    return  ret        
+            
+'''
+#==========================================================================
+# @Method: config Main
+# @command: 
+# @Param: filepath ibmc url
+# @date: 2017.10.31
+#==========================================================================
+'''
+def cfgRaidMain(filepath, ibmc, root_uri, system_uri):
+    pass 
 
 if __name__ == '__main__':
     main()

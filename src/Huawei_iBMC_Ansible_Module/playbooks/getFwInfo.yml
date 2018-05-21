@@ -1,15 +1,15 @@
 ---
 
 - hosts: myhosts
-  name: get logic device info
+  name: update firm ware
   gather_facts: no
 
 
   tasks:
 
 
-  - name: get logic device info
+  - name: update frimware 
     local_action: >
-       ibmc category=GetRaidInfo command='' ibmcip={{ ibmcip }}
+       ibmc category='GetFwInfo' command='' ibmcip={{ ibmcip }}
        ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}
 

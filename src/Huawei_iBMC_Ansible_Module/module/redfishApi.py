@@ -13,6 +13,7 @@ import re
 import sys
 import time
 from datetime import datetime
+import traceback
 
 token = ''
 sessionid = ''
@@ -106,7 +107,7 @@ def getEtag(ibmc,uri):
 
     #get Etag
     try:
-        response = sendGetRequest(ibmc, uri, 10)
+        response = sendGetRequest(ibmc, uri, 100)
     except:
         raise
     if response is None:

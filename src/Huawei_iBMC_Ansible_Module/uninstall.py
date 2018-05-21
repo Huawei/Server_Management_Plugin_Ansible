@@ -36,7 +36,7 @@ if __name__ == "__main__":
     except ImportError:
         pass
 
-    removeAll = raw_input("Do you want to keep configure file and playboosk(Y/N):")
+    removeAll = raw_input("Do you want to keep configure file and playbooks(Y/N):")
     if removeAll.upper() != 'Y' and removeAll.upper() != 'N':
         print "Please input Y or N !"
         exit(1)

@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: deploy os by sp
+  gather_facts: no
+
+
+  tasks:
+
+
+  - name: deploy os by sp
+    local_action: >
+       ibmc category=DeployOsBySp command='/etc/ansible/ansible_ibmc/configFile/deployCfg/SP/deployConfig.ini' ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }} 
+

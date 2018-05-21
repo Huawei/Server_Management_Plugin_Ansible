@@ -25,197 +25,15 @@ from redfishApi import *
 sys.path.append("/etc/ansible/ansible_ibmc/scripts")
 from powerManage import *
 from cfgBmc import *
-
+from commonLoger import *
 LOG_FILE = "/etc/ansible/ansible_ibmc/log/deployOsLog.log"
 REPORT_FILE = "/etc/ansible/ansible_ibmc/report/deployOsReport.log"
-
-log_hander = logging.handlers.RotatingFileHandler(LOG_FILE,maxBytes = 1024*1024,backupCount = 5)
-report_hander = logging.handlers.RotatingFileHandler(REPORT_FILE,maxBytes = 1024*1024,backupCount = 5)
-fmt = logging.Formatter("[%(asctime)s %(levelname)s ] (%(filename)s:%(lineno)d)- %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-log_hander.setFormatter(fmt)
-report_hander.setFormatter(fmt)
-
-log = logging.getLogger('deployOsLog')
-log.addHandler(log_hander)
-log.setLevel(logging.INFO)
-
-report = logging.getLogger('deployOsReport')
-report.addHandler(report_hander)
-report.setLevel(logging.INFO)
+log, report = ansibleGetLoger(LOG_FILE,REPORT_FILE,"deployOsReport")
 
 
 
 global token
 
-
-'''
-#==========================================================================
-# @Method:sCmd 
-# @command: 
-# @Param:  strCmd
-# @date: 2017.10.18
-#==========================================================================
-'''
-def sCmd(strCmd):
-    ret = []
-    if not strCmd:
-        ret.append(55)
-        ret.append("Input cmd is null")
-        return ret
-    if "Windows" != platform.system():
-        strCmd = ['/bin/sh', '-c', strCmd]
-
-    retCmd = subprocess.Popen(strCmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
-    rettup = retCmd.communicate(input='y\n')
-    returnCode = retCmd.wait()
-
-    ret.append(returnCode)
-    ret.append(rettup[0])
-    ret.append(rettup[1])
-
-    return ret
-
-'''
-#==========================================================================
-# @Method:hex2str 
-# @command: 
-# @Param:  hex
-# @date: 2017.10.18
-#==========================================================================
-'''
-def hex2str(hexStr):
-    hexList = hexStr.split()
-    ret = ""
-    for index in hexList:
-        if (index != "00") and (index != ""):
-            ret = ret + chr(int(index,16))
-    return ret
-
-'''
-#==========================================================================
-# @Method: string to hex 
-# @command: 
-# @Param:  str
-# @date: 2017.10.18
-#==========================================================================
-'''
-def str2hex(str):
-    ret = ""
-    ascList = map(ord, str)
-    for index in ascList:
-        ret = ret + " " + hex(index)
-    return ret
-
-'''
-#==========================================================================
-# @Method: readFlag 
-# @command: 
-# @Param:  row
-# @date: 2017.10.18
-#==========================================================================
-'''
-def readFlag(ibmc,row=0):
-
-    ret = os.popen("ipmitool -H " + ibmc['ip'] + " -I lanplus -U "+ ibmc['user'] + " -P " + ibmc['pswd'] + " raw 0x06 0x59 0x00 0xc2 " + hex(row) + " 0x00")
-
-    info = ret.readlines()
-    newStr = ""
-    for line in info:
-        newStr = newStr + line.replace("\n", "")
-
-    newStr = newStr[3:]
-    if (row == 0):
-        newStr = newStr[3:]
-        return [0, hex2str(newStr)]
-    else:
-        return [0, hex2str(newStr)]
-
-'''
-#==========================================================================
-# @Method:read255 
-# @command: read all form bmc info
-# @Param:  ibmc
-# @date: 2017.10.18
-#==========================================================================
-'''
-def read255(ibmc):
-    ret = []
-    flag = True
-    allStr = ""
-    index = 0
-    while index < 16:
-        retRow = readFlag(ibmc,index)
-        if (retRow[0] == 0):
-            allStr = allStr + retRow[1]
-            index = index + 1
-        else:
-            ret = retRow
-            flag = False
-            break
-
-    if (flag == True):
-        ret.append(0)
-        ret.append(allStr)
-    return ret
-
-
-'''
-#==========================================================================
-# @Method:write info to bmc
-# @command: 
-# @Param:  ibmc
-# @date: 2017.10.18
-#==========================================================================
-'''
-def writeRow(ibmc, row, string, sLen=-1):
-
-    if (len(string) > 16):
-        return -1
-    if (sLen != -1):
-        hexStr = " " + hex(sLen) + "" + str2hex(string)
-    else:
-        hexStr = str2hex(string)
-    cmd = "ipmitool -H " + ibmc['ip'] + " -I lanplus -U " + ibmc['user'] + " -P " + ibmc['pswd'] + " raw 0x06 0x58 0xc2 " + hex(row) + hexStr
-    ret = sCmd(cmd)
-
-'''
-#==========================================================================
-# @Method:write255
-# @command: 
-# @Param:  ibmc
-# @date: 2017.10.18
-#==========================================================================
-'''
-def write255(ibmc,string):
-    sLen = len(string)
-    if sLen > 255:
-        return -1
-    row = 0
-    index = 0
-    while index < sLen:
-        if index == 0:
-            writeRow(ibmc,0, string[0:15], sLen)
-            index = index + 15
-            row = row + 1
-        else:
-            writeRow(ibmc,row, string[index:(index + 16)])
-            index = index + 16
-            row = row + 1
-
-
-'''
-#==========================================================================
-# @Method: clear bmc info
-# @command: 
-# @Param:  ibmc
-# @date: 2017.10.18
-#==========================================================================
-'''
-def clearBmcInfo(ibmc):
-    index = 0
-    for index in range(16):
-        cmd = "ipmitool -H " + ibmc['ip'] + " -I lanplus -U " + ibmc['user'] + " -P " + ibmc['pswd'] + " raw 0x06 0x58 0xc2 " + hex(index) + (" 0x00"*16 )
-        os.popen(cmd)
 
 '''
 #==========================================================================
@@ -478,29 +296,29 @@ def unMountFile(ibmc,root_uri,manager_uri):
 def getConfigFile(osName):
     path = ""
     if osName.find("CentOS") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/CentOS.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/CentOS.xml"
     elif osName.find("RHEL") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/RedHat.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/RedHat.xml"
     elif osName.find("SUSE") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/SLES11SP1_64.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/SLES11SP1_64.xml"
     elif osName.find("Win2008_R2") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/win2008r2.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/win2008r2.xml"
     elif osName.find("Win2012_R2") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/win2012r2.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/win2012r2.xml"
     elif osName.find("Win2012") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/win2012.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/win2012.xml"
     elif osName.find("Win2016") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/win2016.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/win2016.xml"
     elif osName.find("ESXi5.0") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/VM5.0.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/VM5.0.xml"
     elif osName.find("ESXi5.1") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/VM5.1.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/VM5.1.xml"
     elif osName.find("ESXi5.5") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/VM5.5.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/VM5.5.xml"
     elif osName.find("ESXi6.0") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/VM6.0.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/VM6.0.xml"
     elif osName.find("ESXi6.5") >= 0:
-        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/VM6.5.xml"
+        path = "/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/VM6.5.xml"
     else:
         path = "Unsupport!"
     return path

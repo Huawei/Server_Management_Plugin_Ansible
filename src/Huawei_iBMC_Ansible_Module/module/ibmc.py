@@ -73,6 +73,10 @@ from cfgTrap import *
 from serverProfile import *
 from getRaidInfo import *
 from cfgNTP import *
+from deployOsBySp import *
+from upgradeFwBySp import *
+from upgradeFwBySp import spUpgradeFwProcess as upgradeFwBySp 
+
 
 session_uri  = "/Sessions"
 tasksvc_uri  = "/TaskService"
@@ -94,7 +98,10 @@ def main():
             command = dict(required=True, type='str', default=None),
             ibmcip = dict(required=True, type='str', default=None),
             ibmcuser = dict(required=False, type='str', default=None),
-            ibmcpswd = dict(required=False, type='str', default=None)
+            ibmcpswd = dict(required=False, type='str', default=None),
+            fileserveruser = dict(required=False, type='str', default=None),
+            fileserverpswd = dict(required=False, type='str', default=None),
+            extraparam = dict(required=False, type='str', default=None)
         ),
         supports_check_mode=False
     )
@@ -131,10 +138,16 @@ def main():
             result = managePower(command, IBMC_INFO, root_uri, system_uri)
         elif category == "DeployOS":
             result = deployOsProcess(command, IBMC_INFO, root_uri, system_uri, manager_uri)
+        elif category == "DeployOsBySp":
+            result = deploySPOSProcess(command, IBMC_INFO, root_uri, system_uri, manager_uri)
         elif category == "CfgRaid":
             result = cfgRaid(command, IBMC_INFO, root_uri, system_uri)
+        elif category == "ModifyRaid":
+            result = modifyRaid(command,IBMC_INFO,root_uri,system_uri)  	      
         elif category == "DelLD":
-            result = delLD(command, IBMC_INFO, root_uri, system_uri)
+            result = deletAllLd(command, IBMC_INFO, root_uri, system_uri)
+        elif category == "DelALD":
+            result = deletALD(command, IBMC_INFO, root_uri, system_uri)    
         elif category == "UpdateFW":
             result = updateFW(command, IBMC_INFO, root_uri, system_uri)
         elif category == "SetBootDevice":
@@ -142,13 +155,17 @@ def main():
         elif category == "ConfigBMC":
             result = configBmc(command, IBMC_INFO, root_uri, manager_uri)
         elif category == "CfgSnmpTrap":
-            result = cfgTrap( IBMC_INFO, root_uri, manager_uri)
+            result = cfgTrap(command, params['extraparam'],IBMC_INFO, root_uri, manager_uri)
         elif category == "Profile":
             result = serverProfile(command, IBMC_INFO, root_uri, manager_uri)
         elif category == "GetRaidInfo":
-            result = getRaidInfo(command, IBMC_INFO, root_uri, system_uri)
+            result = getRaidInfo( IBMC_INFO, root_uri, system_uri)
         elif category == "ConfigNTP":
             result = configNTP(command, IBMC_INFO, root_uri, manager_uri)
+        elif category == "UpgradeFwBySp":
+            result = upgradeFwBySp(params['extraparam'],params['fileserveruser'],params['fileserverpswd'],IBMC_INFO,root_uri,system_uri,manager_uri )
+        elif category =="GetFwInfo":
+            result = getFWInfo(IBMC_INFO,root_uri,system_uri,manager_uri)  	
         else:
             result = {'result': False,'msg':"Invalid Category"}
     except Exception, e:

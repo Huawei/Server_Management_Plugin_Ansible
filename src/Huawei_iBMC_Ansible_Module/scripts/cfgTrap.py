@@ -26,28 +26,13 @@ from redfishApi import *
 sys.path.append("/etc/ansible/ansible_ibmc/scripts/")
 from cfgBmc import *
 from powerManage import *
-
+from commonLoger import *
 global token
 
-# snmp config ini file
-snmpConfigPath = "/etc/ansible/ansible_ibmc/configFile/snmpCfg/snmpTrap.ini"
 
 LOG_FILE = "/etc/ansible/ansible_ibmc/log/cfgSnmpLog.log"
 REPORT_FILE = "/etc/ansible/ansible_ibmc/report/cfgSnmpReport.log"
-
-log_hander = logging.handlers.RotatingFileHandler(LOG_FILE,maxBytes = 1024*1024,backupCount = 5)  
-report_hander = logging.handlers.RotatingFileHandler(REPORT_FILE,maxBytes = 1024*1024,backupCount = 5)  
-fmt = logging.Formatter("[%(asctime)s %(levelname)s ] (%(filename)s:%(lineno)d)- %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-log_hander.setFormatter(fmt)
-report_hander.setFormatter(fmt)
-
-log = logging.getLogger('cfgSnmpLog')
-log.addHandler(log_hander)
-log.setLevel(logging.INFO)  
-
-report = logging.getLogger('cfgSnmpReport')
-report.addHandler(report_hander)  
-report.setLevel(logging.INFO)
+log, report = ansibleGetLoger(LOG_FILE,REPORT_FILE,"cfgSnmpReport")
 
 
 
@@ -85,18 +70,19 @@ def cfgSnmpTrap(ibmc, payload, root_uri, manager_uri):
 # @date: 2017.12.25
 #==========================================================================
 '''
-def cfgTrap(ibmc, root_uri, manage_uri):
+def cfgTrap(filepath, community, ibmc, root_uri, manager_uri):
 
     ret = {'result':True,'msg': ''}
     #parse ini file
     config = ConfigParser.ConfigParser()
-    config.read(snmpConfigPath)
+    config.read(filepath)
 
     ServiceEnabled = config.get("snmpTrapNotification","ServiceEnabled")
     TrapVersion = config.get("snmpTrapNotification","TrapVersion")
     TrapV3User = config.get("snmpTrapNotification","TrapV3User")
     TrapMode = config.get("snmpTrapNotification","TrapMode")
     TrapServerIdentity = config.get("snmpTrapNotification","TrapServerIdentity")
+    CommunityName = community
     AlarmServerity = config.get("snmpTrapNotification","AlarmServerity")
     TrapDestNum = config.get("snmpTrapNotification","TrapDestNum")
     
@@ -109,16 +95,19 @@ def cfgTrap(ibmc, root_uri, manage_uri):
         HuaweiDict['ServiceEnabled'] = ServiceEnabled
     if TrapVersion != "":
         HuaweiDict['TrapVersion'] = TrapVersion
-    if TrapV3User != "":
-        HuaweiDict['TrapV3User'] = TrapV3User
+    if TrapVersion != "":
+        if TrapVersion == "V3" and TrapV3User != "":
+            HuaweiDict['TrapVersion'] = TrapVersion
+            HuaweiDict['TrapV3User'] = TrapV3User
+        else:
+            HuaweiDict['TrapVersion'] = TrapVersion
+            HuaweiDict['CommunityName'] = CommunityName
     if TrapMode != "":
         HuaweiDict['TrapMode'] = TrapMode
     if TrapServerIdentity != "":
         HuaweiDict['TrapServerIdentity'] = TrapServerIdentity
     if TrapDestNum != "":
         TrapDestNum = string.atoi(TrapDestNum)
-    #if community != "":
-    #    HuaweiDict['CommunityName'] = community
    
     if TrapDestNum > 0:
         trapServerDicts = []
@@ -152,7 +141,7 @@ def cfgTrap(ibmc, root_uri, manage_uri):
         playloadDict['SnmpTrapNotification'] = HuaweiDict
  
     try:
-        result = cfgSnmpTrap(ibmc, playloadDict, root_uri, manage_uri)
+        result = cfgSnmpTrap(ibmc, playloadDict, root_uri, manager_uri)
         if result.status_code == 200:
             result = result.json()
             log.info(ibmc['ip'] + " -- " + "config snmp trap successful! ")

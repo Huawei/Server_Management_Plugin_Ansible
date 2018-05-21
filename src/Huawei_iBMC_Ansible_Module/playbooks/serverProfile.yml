@@ -5,8 +5,10 @@
   gather_facts: False
 
 # import or export; iBMC and BIOS profile path
+# default export profile as /tmp/profile.xml if cli has no paramters#
+# export example: 'export;/tmp/profile.xml'
   vars:
-   command: 'export;/tmp/profile.xml'
+   command: 'import;sftp://{{ sftpuser }}:{{ sftppswd }}@192.168.2.156/etc/profile.xml'
   tasks:
 
   - name: import or export server profile

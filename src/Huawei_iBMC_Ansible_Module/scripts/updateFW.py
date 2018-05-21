@@ -15,23 +15,11 @@ import logging, logging.handlers
 from datetime import datetime
 sys.path.append("/etc/ansible/ansible_ibmc/module")
 from redfishApi import *
+from commonLoger import *
 
 LOG_FILE = "/etc/ansible/ansible_ibmc/log/updateFwLog.log"
 REPORT_FILE = "/etc/ansible/ansible_ibmc/report/updateFwReport.log"
-
-log_hander = logging.handlers.RotatingFileHandler(LOG_FILE,maxBytes = 1024*1024,backupCount = 5)
-report_hander = logging.handlers.RotatingFileHandler(REPORT_FILE,maxBytes = 1024*1024,backupCount = 5)
-fmt = logging.Formatter("[%(asctime)s %(levelname)s ] (%(filename)s:%(lineno)d)- %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-log_hander.setFormatter(fmt)
-report_hander.setFormatter(fmt)
-
-log = logging.getLogger('updateFwLog')
-log.addHandler(log_hander)
-log.setLevel(logging.INFO)
-
-report = logging.getLogger('updateFwReport')
-report.addHandler(report_hander)
-report.setLevel(logging.INFO)
+log, report = ansibleGetLoger(LOG_FILE,REPORT_FILE,"updateFwLog")
 
 
 '''

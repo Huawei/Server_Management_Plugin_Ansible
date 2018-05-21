@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: update firm ware
+  gather_facts: no
+
+
+  tasks:
+
+
+  - name: update frimware 
+    local_action: >
+       ibmc category='UpgradeFwBySp' command='' extraparam='/etc/ansible/ansible_ibmc/configFile/upgradeFwBySpCfg/upgradeFwBySp.ini' ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }} fileserveruser={{scpuser}} fileserverpswd={{scppswd}}
+

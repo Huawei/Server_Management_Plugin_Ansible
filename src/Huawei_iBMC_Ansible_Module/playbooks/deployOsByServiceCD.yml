@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: deploy os by ServiceCD
+  gather_facts: no
+
+
+  tasks:
+
+
+  - name: deploy os by ServiceCD
+    local_action: >
+       ibmc category=DeployOS command='/etc/ansible/ansible_ibmc/configFile/deployCfg/ServiceCD/deployConfig.ini' ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }} 
+

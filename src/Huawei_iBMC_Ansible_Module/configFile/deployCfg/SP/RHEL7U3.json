@@ -1,0 +1,47 @@
+{ 
+"InstallMode": "Recommended",
+"OSType": "RHEL7U3",
+"CDKey": "",
+"RootPwd": "huawei12",
+"HostName": "huawei",
+"Language": "en_US.UTF-8",
+"TimeZone": "America/New_York",
+"Keyboard": "us",
+"CheckFirmware": false,
+"Partition":[],
+"Autopart": true,
+"AutoPosition":true,
+"Software": [],
+"NetCfg": [
+       { 
+       "Device": {
+                    "Name": "eth0",
+                    "MAC":"04:B0:E7:48:27:84"
+       },
+       "IPv4Addresses": [
+          {
+           "Address": "192.168.2.244", 
+           "SubnetMask": "255.255.0.0", 
+           "Gateway": "192.168.2.1", 
+           "AddressOrigin": "Static" 
+          }
+       ],       
+       "IPv6Addresses": [ 
+          { 
+            "Address": "2015:60b:e3:a05:aed1:63de:c500:731a", 
+            "PrefixLength": "64",
+            "Gateway": "2015:60b:e3:a05:aed1:63de:c500:731b",
+            "AddressOrigin": "Static"
+           }
+       ],
+       "NameServers":[
+       		{
+       			"DNS":"192.168.2.1"
+       		},
+       		{
+       			"DNS":"192.168.2.2"
+       		}
+       	]
+     }
+]
+}
