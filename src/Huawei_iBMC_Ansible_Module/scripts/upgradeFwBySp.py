@@ -94,8 +94,10 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
     configList = getConfig(filepath)
     if configList != []:    
         for eachitems in configList:
-            itemslist=eachitems["imageurl"].split(":")             
-            if fileserveruser =='' or fileserveruser==None:
+            itemslist=eachitems["imageurl"].split(":") 
+            if  itemslist[1].startswith("//"):
+                itemslist[1]= itemslist[1].lstrip("//")   
+            if "NFS" in itemslist[0].upper():
                 fwfileuri=itemslist[0]+"://"+itemslist[1]
                 fwsignaluri=fwfileuri+".asc"           
             else:
