@@ -14,13 +14,13 @@ II. Description
     This management package provides information and health status query, configuration deployment, and firmware upgrade functions for Huawei servers. 
 	
 	
-III. Supported Software Version
+III. Prerequisites
 
 	python pip request
 	jq JSON parser
 	Ansible: 2.0.0 or later
 	iBMC: 3.00 or later
-	SmartProvisioning: 1.09 or later	
+	SmartProvisioning: 109 or later	
 	
 	
 IV. Supported Device
