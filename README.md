@@ -6,7 +6,7 @@ I. General Information
 
     Name:     Ansible Plugin Pack for Huawei Device
     Category: Configuration
-    Version:  1.0.0
+    Version:  1.2.0
 
 
 II. Description
@@ -16,7 +16,12 @@ II. Description
 	
 III. Supported Software Version
 
-	Ansible 2.0.0 or later
+	python pip request
+	jq JSON parser
+	Ansible: 2.0.0 or later
+	iBMC: 3.00 or later
+	SmartProvisioning: 1.09 or later	
+	
 	
 IV. Supported Device
 
