@@ -93,6 +93,7 @@ def checkSPVersion(ibmc, root_uri,manager_uri):
         APPVersion = rjson[u'Version'][u'APPVersion']
         OSVersion = rjson[u'Version'][u'OSVersion']
         DataVersion = rjson[u'Version'][u'DataVersion']
+        log.info( "appversion:"+str(APPVersion) +" OSVersion:"+str(DataVersion)+" DataVersion:"+str(DataVersion))
         if r.status_code == 200:
             if min(APPVersion,OSVersion,DataVersion) >= '1.09':
                 log.info(ibmc['ip'] + " -- the SP version is greater than 1.09, match the redfish interface requirement! \n")
@@ -449,8 +450,9 @@ def deploySPOSProcess(filepath, ibmc, root_uri, system_uri, manager_uri):
     if rets['result'] == False:
         managePower("PowerOff", ibmc, root_uri, system_uri)
         time.sleep(15)
-        configOS(osConfig, ibmc, root_uri, manager_uri)
-        return rets  
+        rets = configOS(osConfig, ibmc, root_uri, manager_uri)
+        if rets['result'] == False:
+            return rets  
 
     #Set SP Finished, in order to avoid the impact of last result 
     rets = setSPFinished(ibmc, root_uri, manager_uri)
@@ -535,10 +537,10 @@ def deploySPOSProcess(filepath, ibmc, root_uri, system_uri, manager_uri):
                 # get the OS deploy Error Information
                 status = checkOSResult(ibmc, root_uri, manager_uri)
                 OSErrorInfo = status[u'OSErrorInfo']
-                log.error(ibmc['ip'] + " -- install OS has unknown error! ErrorInfo: %s" % OSErrorInfo)
-                report.error(ibmc['ip'] + " -- install OS has unknown error! ErrorInfo: %s" % OSErrorInfo)
+                log.error(ibmc['ip'] + " -- install OS has error! ErrorInfo: %s" % OSErrorInfo)
+                report.error(ibmc['ip'] + " -- install OS has error! ErrorInfo: %s" % OSErrorInfo)
                 rets['result'] = False
-                rets['msg'] = "install OS has unknown error!" + OSErrorInfo
+                rets['msg'] = "install OS has error!" + OSErrorInfo
                 return rets
             if loopInstall >= 60:
                 log.error(ibmc['ip'] + " -- too many times loop, install OS has time out,please try it again!")
