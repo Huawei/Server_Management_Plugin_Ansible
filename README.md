@@ -20,7 +20,7 @@ III. Prerequisites
 	jq JSON parser
 	Ansible: 2.0.0 or later
 	iBMC: 3.00 or later
-	SmartProvisioning: 109 or later	
+	SmartProvisioning: V110 or later	
 	
 	
 IV. Supported Device
