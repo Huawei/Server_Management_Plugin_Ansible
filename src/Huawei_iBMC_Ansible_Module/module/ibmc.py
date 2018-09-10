@@ -16,11 +16,11 @@
 
 ANSIBLE_METADATA = {'status': ['preview'],
                     'supported_by': 'community',
-                    'version': '0.1'}
+                    'version': '1.2.1'}
 
 DOCUMENTATION = """
 module: ibmc
-version_added: "1.2"
+version_added: "1.2.1"
 short_description: Manage Huawei Server through iBMC Redfish APIs
 options:
   category:

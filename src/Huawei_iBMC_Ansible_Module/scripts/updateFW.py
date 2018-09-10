@@ -106,6 +106,7 @@ def updateFW(filepath,ibmc,root_uri, system_uri):
 
                 ret = data[u'TaskState']
                 percent = data[u'Oem'][u'Huawei'][u'TaskPercentage']
+                percent = percent if percent else 0
                 log.info(ibmc['ip'] + " -- status:" +ret + " percent:" + str(percent))
                 if ret == 'Running':
                     time.sleep(1)
@@ -120,7 +121,7 @@ def updateFW(filepath,ibmc,root_uri, system_uri):
                     log.info(ibmc['ip'] + " -- " +"update " + filepath.split("/")[-1] + " failed! \n")
                     report.info(ibmc['ip'] + " -- " +"update " + filepath + " failed! \n")
                     rets['result'] = False 
-                    rets['msg'] = "update failed: unknown error"
+                    rets['msg'] = "update failed: " + data[u'Messages'][u'Message']
                     break
                 
         else:

@@ -30,9 +30,9 @@ CHECK_INTERVAL=6
 #total time= 6s *20
 WAIT_TRANFILE_TIME = 20
 #total time= 6s *100
-WATT_UPGRADE_RES = 100
-#totall 300s
-WAIT_SPSTART =3
+WATT_UPGRADE_RES = 150
+#totall 900s
+WAIT_SPSTART =9
 KEEP_CONNECT_INTERVAL=100
 
 def getConfig(configPath):
@@ -171,7 +171,22 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
     #wait sp start and keep connect 
     for i in range(WAIT_SPSTART):
         time.sleep(KEEP_CONNECT_INTERVAL)
-        spApiGetResultInfo(ibmc,root_uri,manager_uri,resultId=upgradeId)
+        ret=spApiGetResultInfo(ibmc,root_uri,manager_uri,resultId=upgradeId)
+        log.info(ibmc['ip'] +" waiting sp start ...")
+        # try:
+            # if ret['result'] == True:
+                # if "Upgrade"in ret["resultInfo"].keys():
+                    # log.info(ibmc['ip'] +" sp has start")
+                    # break;
+                # else:
+                    # if  i == WAIT_SPSTART-1 :
+                        # log.info( ibmc['ip'] +" wait sp start time out !")             
+            # else :
+                # log.info(ibmc['ip'] +"GetResultInfo error")
+                # continue
+        # except:
+            # log.info(ibmc['ip'] +"GetResultInfo except")  
+            # continue             
     # check update result
 
     for i in range(len(configList)*WATT_UPGRADE_RES): 
@@ -182,7 +197,7 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
                 if  "100" in ret["resultInfo"]["Upgrade"]["Progress"]:
                     resultInfoList= ret["resultInfo"]["Upgrade"]["Detail"]
                 else:
-                    log.info(" upgrade has not finished")
+                    log.info(ibmc['ip'] +" upgrade has not finished")
                     continue
                 for eachitems in configList:
                     filename =getfileName(eachitems["imageurl"])
@@ -194,7 +209,7 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
                                 report.error (filename+ " upgrade failed  : "+ str(eachdis["Description"] )) 
                             break
             except:
-                log.info("have got  no upgrade result ")
+                log.info(ibmc['ip'] +" have got  no upgrade result ")
 
             #result is ok 
             if (not "inited" in  resultdis.values() ) and (resultdis != {}):
