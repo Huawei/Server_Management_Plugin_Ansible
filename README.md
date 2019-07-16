@@ -19,8 +19,8 @@ III. Prerequisites
 	python pip request
 	jq JSON parser
 	Ansible: 2.0.0 or later
-	iBMC: 3.00 or later
-	SmartProvisioning: V110 or later	
+	iBMC: 3.20 or later
+	SmartProvisioning: V116 or later	
 	
 	
 IV. Supported Device
