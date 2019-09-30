@@ -6,7 +6,7 @@ I. General Information
 
     Name:     Ansible Plugin Pack for Huawei Device
     Category: Configuration
-    Version:  1.2.1
+    Version:  1.3.2
 
 
 II. Description
