@@ -95,7 +95,7 @@ def checkSPVersion(ibmc, root_uri,manager_uri):
         DataVersion = rjson[u'Version'][u'DataVersion']
         log.info( "appversion:"+str(APPVersion) +" OSVersion:"+str(DataVersion)+" DataVersion:"+str(DataVersion))
         if r.status_code == 200:
-            if min(APPVersion,OSVersion,DataVersion) >= '1.09':
+            if APPVersion >= '1.09':
                 log.info(ibmc['ip'] + " -- the SP version is greater than 1.09, match the redfish interface requirement! \n")
                 ret['result'] = True
                 ret['msg'] = 'the SP version is greater than 1.09, match the redfish interface requirement!'                

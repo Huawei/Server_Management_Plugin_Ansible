@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: delete account
+  gather_facts: no
+
+
+  tasks:
+
+
+  - name: delete account
+    local_action: >
+       ibmc category=ManageAccount command="deleteAccount"  useraccount="test9" ibmcip={{ ibmcip }} 
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}
+

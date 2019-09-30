@@ -16,11 +16,11 @@
 
 ANSIBLE_METADATA = {'status': ['preview'],
                     'supported_by': 'community',
-                    'version': '1.2.1'}
+                    'version': '1.3.2'}
 
 DOCUMENTATION = """
 module: ibmc
-version_added: "1.2.1"
+version_added: "1.3.2"
 short_description: Manage Huawei Server through iBMC Redfish APIs
 options:
   category:
@@ -76,6 +76,7 @@ from cfgNTP import *
 from deployOsBySp import *
 from upgradeFwBySp import *
 from upgradeFwBySp import spUpgradeFwProcess as upgradeFwBySp 
+from accountManage import *
 
 
 session_uri  = "/Sessions"
@@ -101,7 +102,10 @@ def main():
             ibmcpswd = dict(required=False, type='str', default=None),
             fileserveruser = dict(required=False, type='str', default=None),
             fileserverpswd = dict(required=False, type='str', default=None),
-            extraparam = dict(required=False, type='str', default=None)
+            extraparam = dict(required=False, type='str', default=None),
+            newpassword = dict(required=False, type='str', default=None),
+            roleid = dict(required=False, type='str', default=None),
+            useraccount = dict(required=False, type='str', default=None)
         ),
         supports_check_mode=False
     )
@@ -165,15 +169,22 @@ def main():
         elif category == "UpgradeFwBySp":
             result = upgradeFwBySp(params['extraparam'],params['fileserveruser'],params['fileserverpswd'],IBMC_INFO,root_uri,system_uri,manager_uri )
         elif category =="GetFwInfo":
-            result = getFWInfo(IBMC_INFO,root_uri,system_uri,manager_uri)  	
+            result = getFWInfo(IBMC_INFO,root_uri,system_uri,manager_uri)
+        elif category.lower() == "manageaccount":
+            result = accountMain(IBMC_INFO,root_uri,command,params)          
         else:
             result = {'result': False,'msg':"Invalid Category"}
     except Exception, e:
         result = {'result': False,'msg':str(e)}
     finally:
-        deleteSession(IBMC_INFO,10)
         params['ibmcpswd']="******"
-
+        params['fileserverpswd']="******"
+        params['newpassword']="******"
+    
+    try :
+        deleteSession(IBMC_INFO,10)
+    except  Exception, e:
+        result['msg']=result['msg'] +"deleteSession exception ; the exception is :"+str(e)
 
     if result['result'] == True:
         del result['result']               

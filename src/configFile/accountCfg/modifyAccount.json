@@ -1,0 +1,12 @@
+{
+"test9": {
+"RoleId":"Operator",
+"Enabled":true,
+"Oem":{
+        "Huawei":{
+           "AccountInsecurePromptEnabled":false,
+           "LoginInterface":["Web","SNMP","IPMI","SSH","SFTP","Local","Redfish"]
+           }
+        }
+     }
+}

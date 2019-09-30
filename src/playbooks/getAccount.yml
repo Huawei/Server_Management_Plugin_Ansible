@@ -1,0 +1,15 @@
+---
+
+- hosts: myhosts
+  name: Get Account
+  gather_facts: no
+
+
+  tasks:
+
+
+  - name: Get Account
+    local_action: >
+       ibmc category=ManageAccount command='getAccount' extraparam="" ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}
+

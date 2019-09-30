@@ -1,0 +1,14 @@
+---
+
+- hosts: myhosts
+  name: modify Account
+  gather_facts: no
+
+
+  tasks:
+
+  - name: modify Account
+    local_action: >
+       ibmc category=ManageAccount command="modifyAccount"  extraparam='/etc/ansible/ansible_ibmc/configFile/accountCfg/modifyAccount.json'  ibmcip={{ ibmcip }}
+       ibmcuser={{ ibmcuser }} ibmcpswd={{ ibmcpswd }}
+

@@ -270,14 +270,14 @@ def getRaidCardVersion(IBMC_INFO, url, timeout):
                     RaidFwVersion = ""
 
                 if RaidDriverVersions == "":
-                    RaidDriverVersions = RaidDriverName + " version:" + RaidDriverVersion
+                    RaidDriverVersions = "RAIDStorage" + str(i)+ RaidDriverName + " version:" + RaidDriverVersion
                 else:
-                    RaidDriverVersions = RaidDriverVersions + ";" + RaidDriverName + " version:" + RaidDriverVersion
+                    RaidDriverVersions = RaidDriverVersions + ";" +"RAIDStorage" + str(i)+ RaidDriverName + " version:" + RaidDriverVersion
 
                 if RaidFwVersions == "":
-                    RaidFwVersions = "controller" + str(j) + " version:" + RaidFwVersion
+                    RaidFwVersions = "RAIDStorage" + str(i)+"controller" + str(j) + " version:" + RaidFwVersion
                 else:
-                    RaidFwVersions = RaidFwVersions + ";" + " controller" + str(j) + " version:" + RaidFwVersion
+                    RaidFwVersions = RaidFwVersions + ";" + "RAIDStorage" + str(i)+ "controller" + str(j) + " version:" + RaidFwVersion
 
         return "Driver info:{" + RaidDriverVersions + "} Firmware info:{" +  RaidFwVersions + "}"
 
@@ -321,14 +321,14 @@ def getNetAdaptVersion(IBMC_INFO, url, timeout):
                     NetAdaptFwVersion = ""
 
                 if NetAdaptDriverVersions == "":
-                    NetAdaptDriverVersions = NetAdaptDriverName + " version:" + NetAdaptDriverVersion
+                    NetAdaptDriverVersions ="NetworkInterfaces" + str(i) + NetAdaptDriverName + " version:" + NetAdaptDriverVersion
                 else:
-                    NetAdaptDriverVersions = NetAdaptDriverVersions + ";" + NetAdaptDriverName + " version:" + NetAdaptDriverVersion
+                    NetAdaptDriverVersions = NetAdaptDriverVersions + ";" + "NetworkInterfaces" + str(i) +NetAdaptDriverName + " version:" + NetAdaptDriverVersion
 
                 if NetAdaptFwVersions == "":
-                    NetAdaptFwVersions = "controller" + str(j) + " version:" + NetAdaptFwVersion
+                    NetAdaptFwVersions = "NetworkInterfaces" + str(i) +"controller" + str(j) + " version:" + NetAdaptFwVersion
                 else:
-                    NetAdaptFwVersions = NetAdaptFwVersions + ";" + " controller" + str(j) + " version:" + NetAdaptFwVersion
+                    NetAdaptFwVersions = NetAdaptFwVersions + ";" + "NetworkInterfaces" + str(i) + "controller" + str(j) + " version:" + NetAdaptFwVersion
 
         return "Driver info:{" + NetAdaptDriverVersions + "} Firmware info:{" +  NetAdaptFwVersions + "}"
 

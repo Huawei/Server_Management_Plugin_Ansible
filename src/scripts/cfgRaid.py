@@ -555,17 +555,6 @@ def cfgRaid(configfile, ibmc, root_uri, system_uri):
     report.info(ibmc['ip'] +" cfgRaid successlly ,result :"+str(resultList))
     return  ret        
             
-'''
-#==========================================================================
-# @Method: config Main
-# @command: 
-# @Param: filepath ibmc url
-# @date: 2017.10.31
-#==========================================================================
-'''
-def cfgRaidMain(filepath, ibmc, root_uri, system_uri):
-    pass 
-
 if __name__ == '__main__':
     main()
  

@@ -74,17 +74,55 @@ def cfgTrap(filepath, community, ibmc, root_uri, manager_uri):
 
     ret = {'result':True,'msg': ''}
     #parse ini file
+    if filepath.lower() == "getinfo":
+        ret = getTrapcfg(ibmc, root_uri, manager_uri)
+        return ret
+        
     config = ConfigParser.ConfigParser()
     config.read(filepath)
-
-    ServiceEnabled = config.get("snmpTrapNotification","ServiceEnabled")
-    TrapVersion = config.get("snmpTrapNotification","TrapVersion")
-    TrapV3User = config.get("snmpTrapNotification","TrapV3User")
-    TrapMode = config.get("snmpTrapNotification","TrapMode")
-    TrapServerIdentity = config.get("snmpTrapNotification","TrapServerIdentity")
+    try:
+        ServiceEnabled = config.get("snmpTrapNotification","ServiceEnabled")
+    except Exception , e:
+        ServiceEnabled=''
+        log.info(" get MaxPollingInterval param exception"+ str(e))  
+    
+    try:
+        TrapVersion = config.get("snmpTrapNotification","TrapVersion")
+    except Exception , e:
+        TrapVersion=''
+        log.info(" get MaxPollingInterval param exception"+ str(e))  
+    
+    try:
+        TrapV3User = config.get("snmpTrapNotification","TrapV3User")
+    except Exception , e:
+        TrapV3User=''
+        log.info(" get MaxPollingInterval param exception"+ str(e))      
+    
+    try:    
+        TrapMode = config.get("snmpTrapNotification","TrapMode")
+    except Exception , e:
+        TrapMode=''
+        log.info(" get MaxPollingInterval param exception"+ str(e))  
+    
+    try:    
+        TrapServerIdentity = config.get("snmpTrapNotification","TrapServerIdentity")
+    except Exception , e:
+        TrapServerIdentity=''
+        log.info(" get MaxPollingInterval param exception"+ str(e))      
+    
+    try:    
+        AlarmSeverity = config.get("snmpTrapNotification","AlarmSeverity")
+    except Exception , e:
+        AlarmSeverity=''
+        log.info(" get MaxPollingInterval param exception"+ str(e))  
+    
+    try:        
+        TrapDestNum = config.get("snmpTrapNotification","TrapDestNum")
+    except Exception , e:
+        TrapDestNum=''
+        log.info(" get MaxPollingInterval param exception"+ str(e))      
+    
     CommunityName = community
-    AlarmServerity = config.get("snmpTrapNotification","AlarmServerity")
-    TrapDestNum = config.get("snmpTrapNotification","TrapDestNum")
     
     HuaweiDict = {} 
     if ServiceEnabled != "":
@@ -108,8 +146,10 @@ def cfgTrap(filepath, community, ibmc, root_uri, manager_uri):
         HuaweiDict['TrapServerIdentity'] = TrapServerIdentity
     if TrapDestNum != "":
         TrapDestNum = string.atoi(TrapDestNum)
+    if AlarmSeverity != "":
+        HuaweiDict['AlarmSeverity'] = AlarmSeverity   
    
-    if TrapDestNum > 0:
+    if  TrapDestNum != '' and TrapDestNum > 0:
         trapServerDicts = []
         for i in range(0,TrapDestNum):
             trapServerDict = {}
@@ -133,7 +173,8 @@ def cfgTrap(filepath, community, ibmc, root_uri, manager_uri):
                 TrapServerPort = string.atoi(TrapServerPort)
                 trapServerDict['TrapServerPort'] = TrapServerPort
             trapServerDicts.append(trapServerDict)
-
+    else :
+        trapServerDicts={}
     HuaweiDict['TrapServer'] = trapServerDicts
 
     playloadDict = {}
@@ -143,11 +184,10 @@ def cfgTrap(filepath, community, ibmc, root_uri, manager_uri):
     try:
         result = cfgSnmpTrap(ibmc, playloadDict, root_uri, manager_uri)
         if result.status_code == 200:
-            result = result.json()
-            log.info(ibmc['ip'] + " -- " + "config snmp trap successful! ")
-            report.info(ibmc['ip'] + " -- " + "config snmp trap successful! ")
+            log.info(ibmc['ip'] + " -- " + "config snmp trap successful! "+"==== respon:"+str(result.json()))
+            report.info(ibmc['ip'] + " -- " + "config snmp trap successful! "+"==== respon:"+str(result.json()))
             ret['result'] = True
-            ret['msg'] = "config snmp trap successful!"
+            ret['msg'] = "config snmp trap successful!"+"==== respon:"+str(result.json())
             return ret
         else:
             log.info(ibmc['ip'] + " -- " +"config snmp trap failed!" + str(result.json()))
@@ -160,8 +200,46 @@ def cfgTrap(filepath, community, ibmc, root_uri, manager_uri):
         log.info(ibmc['ip'] + " -- " + "config snmp trap failed!" + str(e))
         report.info(ibmc['ip'] + " -- " + "config snmp trap failed!" + str(e))
         raise
+        
+def getTrapcfg(ibmc, root_uri, manager_uri):
+    uri = root_uri + manager_uri + "/SnmpService"
+    ret = {'result':True,'msg': ''}
+    token = getToken()
+    headers = {'content-type':'application/json','X-Auth-Token':token}
+    payload = {}
 
+    try:
+        r = request('GET',resource=uri,headers=headers,data=payload,tmout=30,ip=ibmc['ip'])
+    except Exception,e:
+        log.exception(ibmc['ip'] + " -- " +"config snmp trap failed! " + str(e))
+        raise
+    if r.status_code == 200:
+        if 'SnmpTrapNotification' in  r.json().keys():
+            fileName= str(ibmc['ip'])+"_trapInfo.json" 
+            ret['msg']='get snmp trap successful! please refer to /etc/ansible/ansible_ibmc/report/%s for detail'%fileName
+            log.info(ibmc['ip'] + " -- " + "get snmp trap successful! snmpInfo json is:" +str(r.json()['SnmpTrapNotification']) )
+            report.info(ibmc['ip'] + " -- " + "get snmp trap successful! snmpInfo json is:"+str(r.json()['SnmpTrapNotification']))
+            jsonfile=None
+            try:
+                jsonfile = open ( '/etc/ansible/ansible_ibmc/report/'+fileName,"w")
+                if jsonfile is not None :
+                    json.dump(r.json(),jsonfile,indent=4) 
+            except Exception ,e:
+                log.error( str(ibmc["ip"])+"write json exception :"+str(e) )
+            finally:
+                if jsonfile is not None:
+                    jsonfile.close()
+        else:
+            log.info(ibmc['ip'] + " -- " + "parse snmp trap info  failed! return json is:" + str(r.json()))
 
+    else:
+        ret['result'] =False
+        ret['msg']='get snmp trap failed!'
+        log.info(ibmc['ip'] + " -- " + "get snmp trap failed!" )
+        report.info(ibmc['ip'] + " -- " + "get snmp trap failed!" )    
+    return ret
+    
+    
 if __name__ == '__main__':
     main()
  

@@ -47,12 +47,13 @@ def getConfig(configPath):
             for (key, value) in parser.items(section):
                 configDate[key] = value
             list.append(configDate)
-    except Exception ,err:
-        log.error(" -- GetConfig  exception : "+str(err))  
+    except Exception , err:
+        log.error(" -- GetConfig  exception : "+str(err)) 
+        raise Exception ("GetConfig  exception\n "+str(err)) 
     finally:
         if file is not None:
            file.close()     
-        return list 
+    return list 
 
 def getfileName(urL):
     tmplist=urL.split("/")
@@ -73,23 +74,36 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
         rets['result'] = False
         rets['msg'] = "ForceOff system failed!"
         return rets
+
+    for cnttimes in range(120):
+        time.sleep(1)
+        ret = managePower("PowerState",ibmc, root_uri, system_uri)
+        if "off" in ret.lower():
+            break ;
+        if  cnttimes == 119:
+            log.error(ibmc['ip'] + "power state is still on after 120 s")
+
     ret = spApiGetFwUpdateId( ibmc, root_uri, manager_uri )
-    if ret['result'] == True:
-        log.info(ibmc['ip'] + " -- GetFwUpdateId  successfully!")
-        if ret["updateidlist"]!=[] or ret["updateidlist"]!=None: 
-            upgradeId=str(ret["updateidlist"][0]+1)
+    try:
+        if ret['result'] == True:
+            log.info(ibmc['ip'] + " -- GetFwUpdateId  successfully!")
+            if ret["updateidlist"]!=[] or ret["updateidlist"]!=None: 
+                upgradeId=str(ret["updateidlist"][0]+1)
+            else:
+                log.error(ibmc['ip'] + " --GetFwUpdateId failed!")
+                report.error(ibmc['ip'] + " -- upgarde Fw failed! GetFwUpdateId failed!")
+                rets['result'] = False
+                rets['msg'] = "GetFwUpdateId failed!"
+                return rets         
         else:
             log.error(ibmc['ip'] + " --GetFwUpdateId failed!")
             report.error(ibmc['ip'] + " -- upgarde Fw failed! GetFwUpdateId failed!")
             rets['result'] = False
             rets['msg'] = "GetFwUpdateId failed!"
-            return rets         
-    else:
-        log.error(ibmc['ip'] + " --GetFwUpdateId failed!")
-        report.error(ibmc['ip'] + " -- upgarde Fw failed! GetFwUpdateId failed!")
-        rets['result'] = False
-        rets['msg'] = "GetFwUpdateId failed!"
-        return rets
+            return rets
+    except Exception, e:
+        raise Exception (ibmc['ip'] + "parse spApiGetFwUpdateId exception :" + "\n" + str(e))
+
     resultdis={}   
     configList = getConfig(filepath)
     if configList != []:    
@@ -103,6 +117,7 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
             else:
                 fwfileuri=itemslist[0]+"://"+fileserveruser +":"+fileserverpswd+"@"+itemslist[1]
                 fwsignaluri=fwfileuri+".asc"
+
             tmpfilename=getfileName(eachitems["imageurl"])
             resultdis[tmpfilename]= "inited"
             ret = spApiSetFwUpgrade( ibmc, root_uri, manager_uri, fwfileuri,\
@@ -115,6 +130,8 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
                 report.error(ibmc['ip'] + " -- upgarde Fw failed! spApiSetFwUpgrade failed!")
                 continue 
             #check files has tranfer to bmc 
+            filename =getfileName(eachitems["imageurl"])
+            ascFile =filename+".asc"
             for i in range(WAIT_TRANFILE_TIME):
                 time.sleep(CHECK_INTERVAL)
                 ret=spApiGetFWSource ( ibmc, root_uri, manager_uri,updateId=upgradeId)
@@ -123,26 +140,33 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
                     if filelist ==[] or filelist==None :
                         continue
                     else :
-                        filename =getfileName(eachitems["imageurl"])
-                        if filename in filelist:
+                        if (filename in filelist) and (ascFile in filelist):
                             log.info(ibmc['ip'] + " -- spApiGetFWSource  successfully!") 
-                            break
-                if i == (WAIT_TRANFILE_TIME-1):
-                    resultdis[tmpfilename] = "failed"
-                    log.error(ibmc['ip'] + " --transfile  failed")
- 
+                            break  
+                                          
+            if  i == ( WAIT_TRANFILE_TIME-1):
+                resultdis[tmpfilename] = "failed"
+                if filename not in filelist :                   
+                    log.error(ibmc['ip'] + " --transfer file %s  failed  all filelist: %s "%(filename,str(filelist) ) )
+                    report.error(ibmc['ip'] + " --transfer file %s  failed  all filelist: %s "%(filename,str(filelist))  )
+                if ascFile not in filelist :                   
+                    log.error(ibmc['ip'] + " --transfer file %s  failed  all filelist: %s "%(ascFile,str(filelist) ) + "please check  if the file %s is exit"%ascFile )
+                    report.error(ibmc['ip'] + " --transfer file %s  failed  all filelist: %s "%(ascFile,str(filelist))+ "please check  if the file %s is exit"%ascFile  ) 
+                
     else:
         log.error(ibmc['ip'] + " --getconfig failed!")
         report.error(ibmc['ip'] + " -- upgarde Fw failed! getconfig failed!")
         rets['result'] = False
         rets['msg'] = "getconfig failed!"
         return rets  
+
     if "inited" not in resultdis.values():
         log.error(ibmc['ip'] + " --set upgrade failed!")
         report.error(ibmc['ip'] + " -- upgarde Fw failed! set upgrade failed!")
         rets['result'] = False
         rets['msg'] = "setupgrade  failed!"+str(resultdis) 
-        return rets     
+        return rets  
+
     #start sp to  upgrade
     ret =  spAPISetSpService(ibmc, root_uri, manager_uri, spEnable=True )  
     if ret['result'] == True:
@@ -168,30 +192,26 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
         rets['result'] = False
         rets['msg'] = "poweron system failed!"
         return rets 
+    
     #wait sp start and keep connect 
     for i in range(WAIT_SPSTART):
         time.sleep(KEEP_CONNECT_INTERVAL)
-        ret=spApiGetResultInfo(ibmc,root_uri,manager_uri,resultId=upgradeId)
+        try:
+            ret=spApiGetResultInfo(ibmc,root_uri,manager_uri,resultId=upgradeId)
+        except Exception , e: 
+            log.error(ibmc['ip'] + " --get up grate result exception "+str(e) )
+            continue
         log.info(ibmc['ip'] +" waiting sp start ...")
-        # try:
-            # if ret['result'] == True:
-                # if "Upgrade"in ret["resultInfo"].keys():
-                    # log.info(ibmc['ip'] +" sp has start")
-                    # break;
-                # else:
-                    # if  i == WAIT_SPSTART-1 :
-                        # log.info( ibmc['ip'] +" wait sp start time out !")             
-            # else :
-                # log.info(ibmc['ip'] +"GetResultInfo error")
-                # continue
-        # except:
-            # log.info(ibmc['ip'] +"GetResultInfo except")  
-            # continue             
-    # check update result
-
+    
+    #check if fw upgrade ok 
     for i in range(len(configList)*WATT_UPGRADE_RES): 
         time.sleep(CHECK_INTERVAL)
-        ret = spApiGetResultInfo(ibmc,root_uri,manager_uri,resultId=upgradeId)
+        try:
+            ret = spApiGetResultInfo(ibmc,root_uri,manager_uri,resultId=upgradeId)
+        except Exception , e:
+            log.error(ibmc['ip'] + " --get up grate result exception "+str(e) )
+            continue
+
         if ret['result'] == True:
             try:
                 if  "100" in ret["resultInfo"]["Upgrade"]["Progress"]:
@@ -208,9 +228,9 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
                                 log.error (filename+ " upgrade failed  : "+ str(eachdis["Description"]) )
                                 report.error (filename+ " upgrade failed  : "+ str(eachdis["Description"] )) 
                             break
-            except:
-                log.info(ibmc['ip'] +" have got  no upgrade result ")
-
+            except Exception , e:
+                log.info(ibmc['ip'] +"parse upgrade result exception" + str(e) )
+                continue 
             #result is ok 
             if (not "inited" in  resultdis.values() ) and (resultdis != {}):
                 if  "failed" in  resultdis.values():
@@ -222,9 +242,9 @@ def spUpgradeFwProcess (filepath,fileserveruser,fileserverpswd,ibmc,root_uri, sy
                     log.info(ibmc['ip'] + " -- upgrade successfully ")
                     report.info(ibmc['ip'] + " -- upgrade successfully")   
                 rets['msg'] = "check result finish ! result " + str (resultdis )  
-                return rets                       
+                return rets  
         else :
-            log.error(ibmc['ip'] + " -- spApiGetResultInfo  system failed!")
+            log.error(ibmc['ip'] + " -- spApiGetResultInfo failed!"+ ret['msg'] )
             continue
 
     log.error(ibmc['ip'] + " -- check result timeout ")
@@ -278,6 +298,3 @@ def getFWInfo(ibmc,root_uri, system_uri, manager_uri):
         report.error( ibmc['ip']+" get fwInfo failed,  make sure you have poweroff SP")
     return rets
 
-
-if __name__=='__main__':
-    pass

@@ -11,6 +11,10 @@ reportdir: /etc/ansible/ansible_ibmc/report
 # input True if we want the inventory query result to be comma-separated
 csvformat: True
 
+#used for create new ibmc account
+newuser: "newuser"
+newpswd: "newpswd"
+
 # input the huawei ibmc user and password
 ibmcuser: "ibmc_user"
 ibmcpswd: "ibmc_pwd"
