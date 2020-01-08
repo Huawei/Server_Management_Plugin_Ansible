@@ -1,0 +1,14 @@
+---
+- hosts: myhosts
+  connection: local
+  name: get ibmc ip
+  gather_facts: False
+
+  tasks:
+  - name: get ibmc ip
+    ibmc_get_ip :
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+
+

@@ -1,0 +1,19 @@
+---
+- hosts: myhosts
+  connection: local
+  name: server profile
+  gather_facts: False
+#file_name:  the file name you want to import or export ;if the file name is empty ,ibmc_ansible_profile will used the default name; such as 172.26.201.2_profile.xml
+#command:  Available values:export, import
+#file_path:  Local export: /tmp Remote export: File protocol://Username:Password@IPaddress/Folder The file transfer
+#    protocols: Available values: sftp,https,nfs,cifs,scp
+
+  tasks:
+  - name: server profile
+    ibmc_server_profile:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      command: "export"
+      file_path: "/tmp" 
+      file_name: "profile.xml"

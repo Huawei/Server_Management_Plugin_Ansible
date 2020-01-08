@@ -1,0 +1,12 @@
+---
+- hosts: myhosts
+  connection: local
+  name: get firmware info by sp 
+  gather_facts: False
+
+  tasks:
+  - name: get firmware info by sp 
+    ibmc_get_firmware_info_by_sp:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}" 

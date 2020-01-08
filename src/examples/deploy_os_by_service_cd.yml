@@ -1,0 +1,61 @@
+---
+- hosts: myhosts
+  connection: local
+  name: deploy os by service cd
+  gather_facts: False
+#os_img: The os image path ; Format: protocol://Username:Password@IPaddress/Folder/image_file; Available protocol: nfs,cifs,https
+#service_cd_img:The service cd image path; Format: protocol://Username:Password@IPaddress/Folder/image_file; Available protocol: nfs,cifs,https
+#os_Type: os type ; Available values: 
+    # CentOS6U7_x64, CentOS6U8_x64, CentOS6U9_x64,CentOS7U0_x64, CentOS7U1_x64, CentOS7U2_x64, CentOS7U3_x64, CentOS7U4_x64, CentOS7U5_x64
+    # RHEL6U7_x64, RHEL6U8_x64, RHEL6U9_x64, RHEL7U0_x64, RHEL7U1_x64, RHEL7U2_x64, RHEL7U3_x64, RHEL7U4_x64, RHEL7U5_x64,
+    # SLES11SP4_x64, SLES11SP3_x64, SLES12_x64, SLES12SP1_x64, SLES12SP2_x64, SLES12SP3_x64,
+    # Ubuntu16.04_x64, Ubuntu14.04_x64
+    # ESXi5.5_x64, ESXi6.0_x64, ESXi6.5_x64, ESXi6.7_x64 
+    # Win2008_R2_x64, Win2012_x64, Win2012_R2_x64, Win2016_x64,   
+#cd_key: key of the OS Installation
+#password: Available values: Please refer to the installation guide of the OS for more infomation. Tips: use a strong password otherwise may failed to install os
+#timezone: Available values: windows Format: (GMT-12:00) International Date Line West; centos,redhat,ubuntu Format:Africa/Abidjan;
+    # SLES Format: Africa/Abidjan ; Please refer to the installation guide of the OS for more infomation.
+#language: Available values: windows Format: en-US; centos,redhat,ubuntu Format:en_US.UTF-8; SlES Format:en_US
+    # Please refer to the installation guide of the OS for more infomation.
+#hostname: Host Name
+#owner_name: Owner Name
+#org_name: Organize Name
+#position: Position where the os install; Available values: disk, usb
+#partitions: Partition information; Available values: Please refer to the installation guide of the OS.
+#mode:  mode to install  Available values: 1, 2, 3,  ;1 for standard, 2 for full , 3 for Customized                  
+#rpms: rpm packages you want to install.
+#script: install script 
+#software: software you want to install; Available values: ibma
+#win_os_name: windows os name, only for windows. Available values:
+    # Windows Server 2016 ServerStandard, Windows Server 2016 ServerStandardCore, Windows Server 2016 ServerDataCenter, Windows Server 2016 ServerDataCenterCore
+    # Windows Server 2012 R2 ServerStandard, Windows Server 2012 R2 ServerStandardCore, Windows Server 2012 R2 ServerDataCenter, Windows Server 2012 R2 ServerDataCenterCore  
+    # Windows Server 2012 ServerStandard, Windows Server 2012 ServerStandardCore, Windows Server 2012 ServerDataCenter,Windows Server 2012 ServerDataCenterCore  
+    # Windows Server 2008 R2 ServerStandard, Windows Server 2008 R2 ServerStandardCore, Windows Server 2008 R2 ServerEnterprise,
+    # Windows Server 2008 R2 ServerEnterpriseCore, Windows Server 2008 R2 ServerDataCenter, Windows Server 2008 R2 ServerDataCenterCore
+    # Windows Server 2008 R2 ServerWeb,Windows Server 2008 R2 ServerWebCore
+  tasks:
+  - name: deploy os by service cd
+    ibmc_deploy_os_by_service_cd:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      service_cd_img: "nfs://172.26.200.11/data/serviceCD.iso"
+      os_img: "nfs://172.26.200.11/data/CentOS-7.3-x86_64-DVD-1611.iso"
+      os_type: "CentOS7U3_x64"
+      win_os_name:
+      cd_key: 
+      password: "{{ os_pswd }}"
+      hostname: 
+      owner_name:
+      language: "en_US.UTF-8"
+      org_name:
+      position: "disk"
+      partitions:
+        - partition: "swap:swap:10000|/:ext3:1"
+      timezone: "America/New_York" 
+      mode: 
+      rpms: 
+        - rpm: 
+      script: 
+      software: "ibma"      

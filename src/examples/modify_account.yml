@@ -1,0 +1,28 @@
+---
+- hosts: myhosts
+  connection: local
+  name: modify ibmc Account 
+  gather_facts: False
+#roleid: role id; Available values: Administrator, Operator, Commonuser, Noaccess, CustomRole1, CustomRole2, CustomRole3, CustomRole4
+#locked: it must be False
+#enable: Whether the user is enabled; Available values: True, False
+#login_interface:list of service the account can access,can be set to empty list [];  Available values in list:Web, SNMP, IPMI, SSH, SFTP, Local, Redfish 
+#login_rule: list of login rules,can be set to empty list []; Available values in list:Rule1, Rule2, Rule3 
+#account_insecure_prompt_enabled: enable or disable account insecure prompt;  Available values: True, False 
+  tasks:
+  - name: modify ibmc Account
+    ibmc_modify_account :
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      old_account_user: "test"
+      new_account_user: "{{ account_user }}"
+      new_account_pswd: "{{ account_pswd }}"
+      roleid: "Administrator"
+      locked: False
+      enable: True
+      login_interface:
+        - web
+      login_rule: 
+        - rule1  
+      account_insecure_prompt_enabled: True

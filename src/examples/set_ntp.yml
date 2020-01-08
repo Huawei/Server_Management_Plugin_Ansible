@@ -1,0 +1,28 @@
+---
+- hosts: myhosts
+  connection: local
+  name: set ntp
+  gather_facts: False
+
+# service_enabled: Enable or disable bmc ntp service, Available values: True, False.
+# pre_ntp_server: Config preferred NtpServer, you can enter ipv4 ipv6 or domain name, NTP Server will be blanked when set to an empty string.
+# alt_ntp_server: Config alternate NtpServer, you can enter ipv4 ipv6 or domain name, NTP Server will be blanked when set to an empty string.
+# server_auth_enabled: Enable or disable Server Authentication service, Available values: True, False.
+# ntp_address_origin: Config Ntp Address Origin, Available values: IPv4, IPv6, Static.
+# min_polling_interval: Config Min Polling Interval time, must be an integer, in 3~17 and <= max_polling_interval.
+# max_polling_interval: Config Max Polling Interval time, must be an integer, in 3~17 and >= min_polling_interval.
+
+  tasks:
+  - name: set ntp
+    ibmc_set_ntp:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      service_enabled: True
+      pre_ntp_server: "192.168.2.10"
+      alt_ntp_server: "192.168.2.20"
+      server_auth_enabled: False
+      ntp_address_origin: "Static"
+      min_polling_interval: 3
+      max_polling_interval: 17
+

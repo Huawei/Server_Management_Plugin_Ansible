@@ -1,0 +1,43 @@
+---
+- hosts: myhosts
+  connection: local
+  name: set snmp trap
+  gather_facts: False
+
+# service_enabled: Whether trap is enabled, Available values: True, False.
+# trap_version: Trap version, Available values: V1, V2C, V3.
+# trap_v3_user: SNMPv3 user name, valid only for trap version is V3.
+# trap_mode: Trap mode, Available values: OID, EventCode, PreciseAlarm.
+# trap_server_identity: Host identifier, Available values: BoardSN, ProductAssetTag, HostName.
+# alarm_severity: Severity levels of the alarm to be sent, Available values: Critical, Major, Minor, Normal.
+# trap_servers: Can set one or more trap server, When all parameters of the trap server are empty, it indicates that the trap server is not configured.
+  # trap_server_enabled: Whether the trap server is enabled, Available values: True, False.
+  # trap_server_address: Server address, you can enter ipv4 ipv6 or domain name.
+  # trap_server_port: Server port number, must be an integer, Available value range: 1 to 65535.
+
+  tasks:
+  - name: set snmp trap
+    ibmc_set_snmp_trap:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      community: "{{ community }}"
+      service_enabled: True
+      trap_version: "V3"
+      trap_v3_user: "root"
+      trap_mode: "OID"
+      trap_server_identity: "HostName"
+      alarm_severity: "Normal"
+      trap_servers:
+        - trap_server_enabled: True
+          trap_server_address: "192.168.2.10"
+          trap_server_port: 160
+        - trap_server_enabled: True
+          trap_server_address: "192.168.2.11"
+          trap_server_port: 161
+        - trap_server_enabled: False
+          trap_server_address: "192.168.2.12"
+          trap_server_port: 162
+        - trap_server_enabled: False
+          trap_server_address: "192.168.2.13"
+          trap_server_port: 163

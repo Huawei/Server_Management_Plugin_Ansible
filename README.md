@@ -4,35 +4,36 @@ Ansible Plugin Pack for Huawei Device
 
 I. General Information
 
-    Name:     Ansible Plugin Pack for Huawei Device
+    Name:     Ansible Plugin Pack for Huawei Server
     Category: Configuration
-    Version:  1.3.2
+    Version:  2.0.3
 
-
+	
 II. Description
 
-    This management package provides information and health status query, configuration deployment, and firmware upgrade functions for Huawei servers. 
-	
-	
-III. Prerequisites
+    This management package provides information and health status query, configuration, deployment and firmware upgrade functions for Huawei servers. 
 
-	python pip request
-	jq JSON parser
-	Ansible: 2.0.0 or later
-	iBMC: 3.20 or later
-	BIOS: 0.51 or later
-	iBMA: V1.30.211 or later
-	SmartProvisioning: V116 or later	
-	ServiceCD: V133 or later
 	
-	
-IV. Supported Device
+III.Supported Software Version
 
-	Huawei Blade Server: CH121 V3,CH121 V5,CH242 V3,CH242 V5
-	Huawei Rack  Server: RH1288 V3,RH2288 V3, RH2288H V3,RH5885 V3,RH8100 V3,1288H V5,2288H V5,2488 V5,2288 V5
-	Huawei High-density Server: XH321 V3,XH620 V3,XH622 V3,XH628 V3,XH321 V5
+    Ansible: 2.5.0 or later	
+
+	
+IV. Software Prerequisites
+
+	python: 2.7.9 or later
+	python requests: 2.6.0 or later
+	jq: 1.5 or later
+	sshpass: 1.06 or later
 	
 	
-V. Additional Resources
+V. Supported Device
+
+	Huawei Blade Server: CH121 V3, CH121 V5, CH242 V3, CH242 V5
+	Huawei Rack  Server: RH2288H V3, 2288H V5, 2488 V5
+	Huawei High-density Server: XH622 V3, XH321 V5
+	
+	
+VI. Additional Resources
 
     For more information consult User Guide. https://github.com/Huawei/Server_Management_Plugin_Ansible/tree/master/docs

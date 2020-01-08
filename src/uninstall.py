@@ -1,47 +1,68 @@
-#! /usr/bin/python
-# _*_ coding:utf-8 _*_
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
+# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License v3.0+
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License v3.0+ for more detail
 
 import os
+import subprocess
 import sys
-import time
-import shutil
 
-copyFileCounts = 0
+from ibmc_ansible.utils import IBMC_EXCU_PATH
 
-ansible_path = ''.join("/etc/ansible")
-huawei_ibmc_path = ansible_path + '/ansible_ibmc'
+print('start uninstalling Huawei ibmc_ansible module')
+try:
+    import ansible
+    from ansible.module_utils.six.moves import input
+except ImportError as e:
+    print("Ansible is not installed.")
+    sys.exit(1)
 
-folderList = [] 
-fileList = ''
+ansible_installed_path = ansible.__path__[0]
+flag_remove_example = False
+ibmc_lib_path = os.path.join(ansible_installed_path, "modules")
+if os.path.exists(os.path.join(ibmc_lib_path, 'ibmc')):
+    while True:
+        print("do you want to keep the yml files?(y/n)")
+        choice = input()
+        if choice in ['y', 'Y']:
+            break
+        elif choice in ['n', 'N']:
+            flag_remove_example = True
+            break
+        else:
+            print("you have press the wrong key")
+    ret = 1
+    ret = subprocess.call("rm -rf %s" % (os.path.join(ibmc_lib_path, 'ibmc')), shell=True)
+    if ret != 0:
+        print("rm ibmc_ansible_module failed")
 
-def removePartFiles(removeDir):
-    fileList = os.listdir(removeDir)
-    
-    for fileName in fileList:
-        if os.path.isfile(removeDir + os.path.sep + fileName):
-            os.remove(removeDir + os.path.sep + fileName)
-            continue
-        
-        if fileName != "configFile" and fileName != "playbooks":
-            shutil.rmtree(removeDir + os.path.sep + fileName)
+    ret = 1
+    ret = subprocess.call("rm -rf %s" % (os.path.join(ibmc_lib_path, 'ibmc')), shell=True)
+    if ret != 0:
+        print("rm ibmc_ansible_module failed")
 
-def removeAllFiles(removeDir):
-    if os.path.exists(removeDir):
-        shutil.rmtree(removeDir)
+    ibmc_utils_path = os.path.join(ansible_installed_path, "../")
+    ibmc_utils_path = os.path.join(ibmc_utils_path, "ibmc_ansible")
 
-if __name__ == "__main__":
-    try:
-        import psyco
-        psyco.profile()
-    except ImportError:
-        pass
+    ret = 1
+    ret = subprocess.call("rm -rf %s" % ibmc_utils_path, shell=True)
+    if ret != 0:
+        print("rm ibmc_ansible_refish api  failed")
+    if flag_remove_example:
+        ret = 1
+        ret = subprocess.call("rm -rf %s" % IBMC_EXCU_PATH, shell=True)
+        if ret != 0:
+            print("rm ibmc ansible yml failed")
+    print("finish uninstalling ibmc_ansible modules")
+    sys.exit(0)
 
-    removeAll = raw_input("Do you want to keep configure file and playbooks(Y/N):")
-    if removeAll.upper() != 'Y' and removeAll.upper() != 'N':
-        print "Please input Y or N !"
-        exit(1)
-    if removeAll.upper() == 'Y':
-        removePartFiles(huawei_ibmc_path)
-    else:
-        removeAllFiles(huawei_ibmc_path)
-
+else:
+    print("can not find ibmc_ansible module !")
+    sys.exit(1)

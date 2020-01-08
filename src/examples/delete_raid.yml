@@ -1,0 +1,24 @@
+---
+- hosts: myhosts
+  connection: local
+  name: delete raid
+  gather_facts: False
+
+# storage_id: ID of the storage resource
+  # 1.Delete one RAID storage, Format: RAIDStorage+Controller_ID
+  # 2.Delete multiple RAID storage, Separated by commas, Format: RAIDStorage+Controller_ID1,RAIDStorage+Controller_ID2,...
+  # 3.Delete all RAID storage, Format: all
+# volume_id: Volume resource ID
+  # 1.Delete one volume, Format: LogicalDrive+Volume_ID
+  # 2.Delete multiple volume, Separated by commas, Format: LogicalDrive+Volume_ID1,LogicalDrive+Volume_ID2,...
+  # 3.Delete all volume, Format: all
+
+  tasks:
+  - name: delete raid
+    ibmc_delete_raid:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      storage_id: "RAIDStorage0,RAIDStorage1"
+      volume_id: "LogicalDrive0,LogicalDrive1"
+

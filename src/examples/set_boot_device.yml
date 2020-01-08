@@ -1,0 +1,20 @@
+---
+- hosts: myhosts
+  connection: local
+  name: set boot device
+  gather_facts: False
+
+# boot_target: Current boot device, Available values: Cd, None, Pxe, Floppy, Hdd, BiosSetup.
+# boot_enabled: Whether the boot settings are effective, Available values: Disabled, Once, Continuous.
+# boot_mode: Boot mode, Available values: UEFI, Legacy.
+
+  tasks:
+  - name: set boot device
+    ibmc_set_boot_device:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      boot_target: "Cd"
+      boot_enabled: "Once"
+      boot_mode: "Legacy"
+

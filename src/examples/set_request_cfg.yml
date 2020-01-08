@@ -1,0 +1,15 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+  name: set request config
+  gather_facts: False
+  # verify: the requests module verify server certify or not; Available values: True, False;
+  # certify: the certify use to verify the server, if this params do not set , requests module will used the certificate
+  #which is in the certifi module or the system default certificate. Format: /etc/pki/tls/certs/ca-bundle.crt
+  # force_tls1_2: force to use tls1.2 , the default value is true.
+  tasks:
+    - name:  set request config
+      ibmc_set_redfish_request_cfg:
+        force_tls1_2: True
+        verify: True
+        certify:

@@ -1,0 +1,37 @@
+---
+- hosts: myhosts
+  connection: local
+  name: modify raid
+  gather_facts: False
+
+# storage_id: ID of the storage resource. Format: RAIDStorage+Controller_ID
+# volume_id: Volume resource ID. Format: LogicalDrive+Volume_ID
+# volume_name: Volume name. It is an optional parameter. A string of up to 15 bytes. Value range: ASCII code corresponding to 0x20 to 0x7E
+# df_read_policy: Default read policy of the volume. It is an optional parameter. Available values: NoReadAhead, ReadAhead
+# df_write_policy: Default write policy of the volume. It is an optional parameter. Available values: WriteThrough, WriteBackWithBBU, WriteBack
+# df_cache_policy: Default cache policy of the volume. It is an optional parameter. Available values: CachedIO, DirectIO
+# boot_enable: Whether it is the boot device. Available values: True.
+# bgi_enable: Whether background initialization is enabled. Available values: True, False.
+# access_policy: Volume access policy. It is an optional parameter. Available values: ReadWrite, ReadOnly, Blocked
+# ssd_cache_enable: Whether the CacheCade volume is used as the cache. Available values: True, False.
+# disk_cache_policy: Cache policy for member disks. It is an optional parameter. Available values: Unchanged, Enabled, Disabled
+
+
+  tasks:
+  - name: modify raid
+    ibmc_modify_raid:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      volumes:
+       - storage_id: "RAIDStorage0"
+         volume_id: "LogicalDrive0"
+         volume_name: "volume_name"
+         df_read_policy: "NoReadAhead"
+         df_write_policy: "WriteThrough"
+         df_cache_policy: "CachedIO"
+         boot_enable: True
+         bgi_enable: False
+         access_policy: "ReadWrite"
+         ssd_cache_enable: False
+         disk_cache_policy: "Unchanged"

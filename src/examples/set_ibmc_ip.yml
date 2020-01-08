@@ -1,0 +1,36 @@
+---
+- hosts: myhosts
+  connection: local
+  name: set ibmc ip
+  gather_facts: False
+
+# ip_version: Whether IPv4/IPv6 is enabled, Available values: IPv4, IPv6, IPv4AndIPv6.
+# ipv4_addr: IPv4 address info.
+  # address: IPv4 address.
+  # subnet_mask: Subnet mask of the IPv4 address.
+  # gateway: Gateway of the IPv4 address.
+  # address_origin: How the IPv4 address is allocated. Available values: Static, DHCP.
+# ipv6_addr: IPv6 address info.
+  # address: IPv6 address.
+  # prefix_length: Prefix length of the IPv6 address, must be an integer, value range: 0 to 128.
+  # address_origin: How the IPv6 address is allocated. Available values: Static, DHCPv6.
+# ipv6_gateway: IPv6 gateway address of the iBMC network port.
+
+  tasks:
+  - name: set ibmc ip
+    ibmc_set_ip:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      ip_version: "IPv4AndIPv6"
+      ipv4_addr:
+        - address: "172.26.100.100"
+          subnet_mask: "255.255.0.0"
+          gateway: "172.26.0.1"
+          address_origin: "Static"
+      ipv6_addr:
+        - address: "fc00:172::100"
+          prefix_length: 10
+          address_origin: "Static"
+      ipv6_gateway: "fc00:172::1"
+

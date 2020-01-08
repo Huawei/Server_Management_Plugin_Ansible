@@ -1,0 +1,13 @@
+---
+- hosts: myhosts
+  connection: local
+  name: power manager
+  gather_facts: False
+#power_cmd:  Available values:"poweron" "poweroff" "forcerestart" "gracefulshutdown" "forcepowercycle" "nmi" 
+  tasks:
+  - name: power manager
+    ibmc_set_power:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}" 
+      power_cmd: "poweron"

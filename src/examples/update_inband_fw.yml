@@ -1,0 +1,16 @@
+---
+- hosts: myhosts
+  connection: local
+  name: update inband fw
+  gather_facts: False
+
+  tasks:
+  - name:  update inband fw
+    ibmc_inband_fw_update:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}" 
+      image_url:
+        - "sftp://172.26.200.11/data/NIC-LOM-X722-10GE_SFP-GE_Electrical-FW-3.33_0x80000f09.zip"
+      file_server_user: "{{sftp_user}}"
+      file_server_pswd: "{{sftp_pswd}}"
