@@ -6,7 +6,7 @@ I. General Information
 
     Name:     Ansible Plugin Pack for Huawei Server
     Category: Configuration
-    Version:  2.0.3
+    Version:  2.0.4
 
 	
 II. Description
