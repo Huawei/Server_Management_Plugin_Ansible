@@ -12,7 +12,7 @@
 
 import json
 import ssl
-
+import re
 import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
@@ -43,7 +43,8 @@ if IMPORT_TLS:
           """
 
         def init_poolmanager(self, *pool_args, **pool_kwargs):
-            self.poolmanager = PoolManager(*pool_args, ssl_version=ssl.PROTOCOL_TLSv1_2, **pool_kwargs)
+            self.poolmanager = PoolManager(
+                *pool_args, ssl_version=ssl.PROTOCOL_TLSv1_2, **pool_kwargs)
 
 
 class IbmcBaseConnect():
@@ -254,13 +255,17 @@ class IbmcBaseConnect():
         url = resource
         try:
             if method == 'POST':
-                r = self.session.post(url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
+                r = self.session.post(
+                    url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
             elif method == 'GET':
-                r = self.session.get(url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
+                r = self.session.get(
+                    url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
             elif method == 'DELETE':
-                r = self.session.delete(url, data=None, headers=headers, verify=self.verify, timeout=tmout)
+                r = self.session.delete(
+                    url, data=None, headers=headers, verify=self.verify, timeout=tmout)
             elif method == 'PATCH':
-                r = self.session.patch(url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
+                r = self.session.patch(
+                    url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
             else:
                 raise Exception("Request method not support")
         except Exception as e:
@@ -273,7 +278,7 @@ class IbmcBaseConnect():
         Args:
                 timeout            (int): overtime time
         Returns:
-            bool 
+            bool
         Raises:
             None
         Examples:
@@ -286,12 +291,15 @@ class IbmcBaseConnect():
         try:
             r = self.request('POST', url, data=payload, tmout=timeout)
         except Exception as e:
-            self.log_error("Create session exception, The error info is: %s" % str(e))
+            self.log_error(
+                "Create session exception, The error info is: %s" % str(e))
             raise
         try:
             if r is None:
-                self.log_error("Failed to create session, The response is none")
-                raise Exception("Failed to create session, The response is none")
+                self.log_error(
+                    "Failed to create session, The response is none")
+                raise Exception(
+                    "Failed to create session, The response is none")
             elif r.status_code == 201:
                 index = r.headers['Location'].find("/redfish")
                 if index != -1:
@@ -304,10 +312,13 @@ class IbmcBaseConnect():
                 self._set_token(token)
                 self._set_bmc_session_id(session_id)
             else:
-                self.log_error("Failed to create session, The error code is: %s" % r.status_code)
-                raise Exception("Failed to create session, The error code is: %s" % r.status_code)
+                self.log_error(
+                    "Failed to create session, The error code is: %s" % r.status_code)
+                raise Exception(
+                    "Failed to create session, The error code is: %s" % r.status_code)
         except Exception as e:
-            self.log_error("Create session exception, The error info is: %s" % str(e))
+            self.log_error(
+                "Create session exception, The error info is: %s" % str(e))
             raise
 
     def delete_session(self, timeout=10):
@@ -324,12 +335,14 @@ class IbmcBaseConnect():
         Date: 10/19/2019
         """
         session_id = self._get_bmc_session_id()
-        url = 'https://%s/redfish/v1/SessionService/Sessions/%s' % (self.ip, session_id)
+        url = 'https://%s/redfish/v1/SessionService/Sessions/%s' % (
+            self.ip, session_id)
         playload = {'UserName': self.user, 'Password': self.pswd}
         try:
             r = self.request('DELETE', url, data=playload, tmout=timeout)
         except Exception as e:
-            self.log_error("Failed to delete session, The error info is: %s" % str(e))
+            self.log_error(
+                "Failed to delete session, The error info is: %s" % str(e))
             raise
         if r is None:
             ret = {'status_code': 999,
@@ -349,7 +362,7 @@ class IbmcBaseConnect():
         Args:
             self
         Returns:
-            uri 
+            uri
         Raises:
             None
         Examples:
@@ -361,20 +374,24 @@ class IbmcBaseConnect():
         try:
             response = self.request('GET', uri)
         except Exception as e:
-            self.log_error("Get system_uri failed! The uri is : %s, The error is %s" % (str(uri), str(e)))
+            self.log_error(
+                "Get system_uri failed! The uri is : %s, The error is %s" % (str(uri), str(e)))
             raise
         if response is None:
             self.log_error("get system_uri failed! uri :%s " % uri)
             raise Exception("get system uri exception response is none")
         else:
             if response.status_code != 200:
-                self.log_error("get system_uri failed, The response is: %s, The uri is: %s" % (str(response), str(uri)))
-                raise Exception("get system_uri failed, The response is: %s" % str(response))
+                self.log_error("get system_uri failed, The response is: %s, The uri is: %s" % (
+                    str(response), str(uri)))
+                raise Exception(
+                    "get system_uri failed, The response is: %s" % str(response))
             try:
                 ret = response.json()
                 ret = ret['Members'][0]['@odata.id']
             except Exception as e:
-                self.log_error("Failed to get system_uri, The error info is: %s" % str(e))
+                self.log_error(
+                    "Failed to get system_uri, The error info is: %s" % str(e))
                 raise
         return ret
 
@@ -396,21 +413,25 @@ class IbmcBaseConnect():
         try:
             response = self.request('GET', uri, tmout=100)
         except Exception as e:
-            self.log_error("Failed to get etag, The error info is: %s" % str(e))
+            self.log_error(
+                "Failed to get etag, The error info is: %s" % str(e))
             raise
         if response is None:
             raise Exception("get etag response is none")
         elif response.status_code == 200:
-            ret = {'status_code': 200, 'message': response.content, 'headers': response.headers}
+            ret = {'status_code': 200, 'message': response.content,
+                   'headers': response.headers}
             if 'ETag' in ret['headers'].keys():
                 etag = ret['headers']['ETag']
             elif 'etag' in ret['headers'].keys():
                 etag = ret['headers']['etag']
         else:
             try:
-                ret = {'status_code': response.status_code, 'message': response.json(), 'headers': response.headers}
+                ret = {'status_code': response.status_code,
+                       'message': response.json(), 'headers': response.headers}
             except Exception as e:
-                self.log_error("Failed to get etag, The error info is: %s" % str(e))
+                self.log_error(
+                    "Failed to get etag, The error info is: %s" % str(e))
                 raise
             if 'Etag' in ret['headers'].keys():
                 etag = ret['headers']['ETag']
@@ -436,9 +457,11 @@ class IbmcBaseConnect():
         uri = "%s/TaskService/Tasks/%s" % (self.root_uri, taskid)
         payload = {}
         try:
-            r = self.request('GET', resource=uri, headers=headers, data=payload, tmout=300)
+            r = self.request('GET', resource=uri,
+                             headers=headers, data=payload, tmout=300)
         except Exception as e:
-            self.log_error("Failed to get task, The error info is: %s" % (str(e)))
+            self.log_error(
+                "Failed to get task, The error info is: %s" % (str(e)))
             raise
         return r
 
@@ -521,14 +544,18 @@ class IbmcBaseConnect():
         headers = {'content-type': 'application/json', 'X-Auth-Token': token}
         payload = {}
         try:
-            systems_r = self.request('GET', resource=self.system_uri, headers=headers, data=payload, tmout=30)
+            systems_r = self.request(
+                'GET', resource=self.system_uri, headers=headers, data=payload, tmout=30)
             if systems_r.status_code != 200:
-                raise Exception("Get systems info send command exception, error code:%d" % systems_r.status_code)
+                raise Exception(
+                    "Get systems info send command exception, error code:%d" % systems_r.status_code)
             else:
                 systems_json = systems_r.json()
         except Exception as e:
-            self.log_error("Get systems info send command exception, %s" % str(e))
-            raise Exception("Get systems info send command exception, exception is: %s" % str(e))
+            self.log_error(
+                "Get systems info send command exception, %s" % str(e))
+            raise Exception(
+                "Get systems info send command exception, exception is: %s" % str(e))
         return systems_json
 
     def get_chassis_resource(self):
@@ -551,15 +578,19 @@ class IbmcBaseConnect():
         headers = {'content-type': 'application/json', 'X-Auth-Token': token}
         payload = {}
         try:
-            chassis_r = self.request('GET', resource=self.chassis_uri, headers=headers, data=payload, tmout=30)
+            chassis_r = self.request(
+                'GET', resource=self.chassis_uri, headers=headers, data=payload, tmout=30)
             if chassis_r.status_code != 200:
-                raise Exception("Get chassis info send command exception, error code:%d" % chassis_r.status_code)
+                raise Exception(
+                    "Get chassis info send command exception, error code:%d" % chassis_r.status_code)
             else:
                 chassis_json = chassis_r.json()
 
         except Exception as e:
-            self.log_error("Get chassis info send command exception, %s" % str(e))
-            raise Exception("Get chassis info send command exception, exception is: %s" % str(e))
+            self.log_error(
+                "Get chassis info send command exception, %s" % str(e))
+            raise Exception(
+                "Get chassis info send command exception, exception is: %s" % str(e))
         return chassis_json
 
     def get_manager_resource(self):
@@ -583,15 +614,19 @@ class IbmcBaseConnect():
         headers = {'content-type': 'application/json', 'X-Auth-Token': token}
         payload = {}
         try:
-            manager_r = self.request('GET', resource=self.manager_uri, headers=headers, data=payload, tmout=30)
+            manager_r = self.request(
+                'GET', resource=self.manager_uri, headers=headers, data=payload, tmout=30)
             if manager_r.status_code != 200:
-                raise Exception("Get manager info send command exception, error code:%d" % manager_r.status_code)
+                raise Exception(
+                    "Get manager info send command exception, error code:%d" % manager_r.status_code)
             else:
                 manager_json = manager_r.json()
 
         except Exception as e:
-            self.log_error("Get manager info send command exception, %s" % str(e))
-            raise Exception("Get manager info send command exception, exception is: %s" % str(e))
+            self.log_error(
+                "Get manager info send command exception, %s" % str(e))
+            raise Exception(
+                "Get manager info send command exception, exception is: %s" % str(e))
         return manager_json
 
     def get_ibmc_version(self):
@@ -635,14 +670,18 @@ class IbmcBaseConnect():
         headers = {'content-type': 'application/json', 'X-Auth-Token': token}
         payload = {}
         uri = "%s/SPService" % self.manager_uri
-        r = self.request('GET', resource=uri, headers=headers, data=payload, tmout=10)
+        r = self.request('GET', resource=uri, headers=headers,
+                         data=payload, tmout=10)
         if r.status_code == 200:
             if r.json().get("Version") is None:
-                raise Exception(" r.json() do not has key version r.json():%s" % str(r.json()))
+                raise Exception(
+                    " r.json() do not has key version r.json():%s" % str(r.json()))
             return r.json().get("Version")
         else:
-            self.log_error("get_sp_version failed ,error code is :%s" % str(r.status_code))
-            raise Exception("get_sp_version failed ,error code is :%s" % str(r.status_code))
+            self.log_error(
+                "get_sp_version failed ,error code is :%s" % str(r.status_code))
+            raise Exception(
+                "get_sp_version failed ,error code is :%s" % str(r.status_code))
 
     def check_ibmc_version(self, except_version):
         """
@@ -659,7 +698,21 @@ class IbmcBaseConnect():
         Author:
         Date: 10/30/2019
         """
+        OLD_VESION_STYLE = r'^\d+.\d*\d$'
+        NEW_VERSION_STYLE = r'^\d+.\d+.\d+.\d*\d$'
+
         bmc_version = self.get_ibmc_version()
+        self.log_info("bmc_version is " + bmc_version)
+        # bmc version is old style and  except veison is new style
+        if re.match(OLD_VESION_STYLE, bmc_version) and re.match(NEW_VERSION_STYLE, except_version):
+            self.log_info(
+                "bmc_version and except_version is not the same style")
+            return True
+        # bmc version is new style and  except veison is old style
+        if re.match(NEW_VERSION_STYLE, bmc_version) and (re.match(OLD_VESION_STYLE, except_version)):
+            self.log_info(
+                "bmc_version and  except_version is not the same style")
+            return True
         if bmc_version is None:
             raise Exception("get bmc version return none")
         if bmc_version >= except_version:
