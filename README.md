@@ -35,10 +35,10 @@ V. Supported Device
     	Huawei High-density Server: XH622 V3, XH321 V5 
     
     ARM Architecture:
-        TaiShan 200 server (model 2280) 
-	TaiShan 200 server (model 5280) 
-	TaiShan 200 server (model 5290) 
-	TaiShan 200 server (model 2480)	
+    	TaiShan 200 server (model 2280) 
+    	TaiShan 200 server (model 5280) 
+    	TaiShan 200 server (model 5290) 
+    	TaiShan 200 server (model 2480)	
 	
 VI. Additional Resources
 
