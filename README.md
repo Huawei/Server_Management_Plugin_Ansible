@@ -31,7 +31,7 @@ V. Supported Device
     
     X86 Architecture:
     	Huawei Blade Server: CH121 V3, CH121 V5, CH242 V3, CH242 V5 
-    	Huawei Rack  Server: RH2288H V3, 2288H V5, 2488 V5 
+    	Huawei Rack Server: RH2288H V3, 2288H V5, 2488 V5 
     	Huawei High-density Server: XH622 V3, XH321 V5 
     
     ARM Architecture:
