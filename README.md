@@ -11,7 +11,7 @@ I. General Information
 	
 II. Description
 
-    This management package provides information and health status query, configuration, deployment and firmware upgrade functions for Huawei servers. 
+    Integrated in the Ansible software, Huawei Ansible plug-in is used to manage Huawei servers and connects to the iBMC through the Redfish interface. With this plug-in, you can query, configure, deploy, and upgrade the Huawei server.
 
 	
 III.Supported Software Version
