@@ -11,7 +11,8 @@ I. General Information
 	
 II. Description
 
-    Integrated in the Ansible software, Huawei Ansible plug-in is used to manage Huawei servers and connects to the iBMC through the Redfish interface. With this plug-in, you can query, configure, deploy, and upgrade the Huawei server.
+    Integrated in the Ansible software, Huawei Ansible plug-in is used to manage Huawei servers and connects to the iBMC through the Redfish interface. 
+    With this plug-in, you can query, configure, deploy, and upgrade the Huawei server.
 
 	
 III.Supported Software Version
