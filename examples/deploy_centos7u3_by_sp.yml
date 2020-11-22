@@ -9,8 +9,10 @@
 # Win2016 Datacenter Core, Win2012_R2, Win2012_R2 Standard Desktop, Win2012_R2 Standard Core, Win2012_R2 Datacenter Desktop, Win2012_R2 Datacenter Core
 # EulerOSV2SP3
 #InstallMode: OS Installation mode;  Available values:Recommended, Customized 
-#Language: Available values: Please refer to the installation guide of the OS. 
-#TimeZone: Available values: Please refer to the installation guide of the OS.
+#TimeZone: Available values: windows Format: (GMT-12:00) International Date Line West; centos,redhat,ubuntu Format:Africa/Abidjan;
+# SLES Format: Africa/Abidjan ; Please refer to the installation guide of the OS for more infomation.
+#Language: Available values: windows Format: en-US; centos,redhat,ubuntu Format:en_US.UTF-8; SlES Format:en_US
+# Please refer to the installation guide of the OS for more infomation.
 #Keyboard: Available values: Please refer to the installation guide of the OS.
 #BootType: Bios boot mode,This parameter is optional; Available values: UEFIBoot, LegacyBoot, SecureBoot
 #CDKey: key of the OS Installation, This parameter is optional 
@@ -34,7 +36,7 @@
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
       ibmc_pswd: "{{ ibmc_pswd }}"
-      os_img: "nfs://172.26.200.11/data/centeros7u3.iso"
+      os_img: "nfs://172.26.200.11/data/centos7u3.iso"
       os_config:
         InstallMode: "Recommended"
         OSType: "CentOS7U3"

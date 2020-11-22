@@ -11,8 +11,14 @@
 # GNU General Public License v3.0+ for more detail
 
 import os
-from ibmc_ansible.utils import write_result
+import json
+
+from ibmc_ansible.utils import write_result, write_result_csv
 from ibmc_ansible.utils import IBMC_REPORT_PATH
+
+VER_HEADER = ["ProductName", "Model", "Status", "SerialNumber", "AssetTag", "iBMCVersion", "BiosVersion", "CPLDVersion",
+              "SPVersion"]
+SUMMARY_HEADER = ["CPUCount", "CPUStatus", "MemoryGiB", "MemoryStatus", "DriveCount", "DriveStatus"]
 
 
 def get_drives_info(ibmc, chassis_json):
@@ -20,16 +26,16 @@ def get_drives_info(ibmc, chassis_json):
     Function:
         get drives info
     Args:
-         ibmc (str):   IbmcBaseConnect Object
+         ibmc:   IbmcBaseConnect Object
          chassis_json: chassis resource info
     Returns:
-        {"BiosVersion": "1.17", "SerialNumber": "42353423", }
+        {"BiosVersion": "1.17", "SerialNumber": "42353423"}
     Raises:
         Exception
     Examples:
         None
     Author:
-    Date: 10/26/2019
+    Date: 2019/10/26
     """
     drive_info = {}
     token = ibmc.get_token()
@@ -73,16 +79,16 @@ def get_mem_info(ibmc, systems_json):
     Function:
         get memory info
     Args:
-         ibmc (str):   IbmcBaseConnect Object
+         ibmc:   IbmcBaseConnect Object
          systems_json: systems resource
     Returns:
-        {"BiosVersion": "1.17", "SerialNumber": "42353423", }
+        {"BiosVersion": "1.17", "SerialNumber": "42353423"}
     Raises:
         Exception
     Examples:
         None
     Author:
-    Date: 10/26/2019
+    Date: 2019/10/26
     """
     memory_info = {}
     token = ibmc.get_token()
@@ -132,16 +138,16 @@ def get_cpu_info(ibmc, systems_json):
     Function:
         get cpu info
     Args:
-         ibmc (str):   IbmcBaseConnect Object
+         ibmc:   IbmcBaseConnect Object
          systems_json : system resource
     Returns:
-        {"BiosVersion": "1.17", "SerialNumber": "42353423", }
+        {"BiosVersion": "1.17", "SerialNumber": "42353423"}
     Raises:
         Exception
     Examples:
         None
     Author:
-    Date: 10/26/2019
+    Date: 2019/10/26
     """
     cpu_info = {}
     token = ibmc.get_token()
@@ -204,7 +210,7 @@ def get_fan_info(ibmc, chassis_json):
     Examples:
         None
     Author:
-    Date: 11/23/2019
+    Date: 2019/11/23
     """
     token = ibmc.get_token()
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
@@ -227,7 +233,7 @@ def get_fan_info(ibmc, chassis_json):
     return fan_json
 
 
-def get_cpld_info(ibmc, chassis_json):
+def get_cpld_info(ibmc):
     """
     Function:
         get fan info
@@ -235,165 +241,257 @@ def get_cpld_info(ibmc, chassis_json):
          ibmc:   IbmcBaseConnect Object
          chassis_json: chassis json data
     Returns:
-        {}
+        cpld info
     Raises:
         Exception
     Examples:
         None
     Author:
-    Date: 11/23/2019
+    Date: 2020/10/10
     """
     token = ibmc.get_token()
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
     payload = {}
-    main_board_uri = ""
-    cpld_json = ""
-    board_json = ""
+    cpld_info = {}
     try:
-        board_uri = chassis_json['Oem']['Huawei']['Boards']['@odata.id']
-        uri = "https://%s%s" % (ibmc.ip, board_uri)
+        uri = "https://%s%s" % (ibmc.ip, "/redfish/v1/UpdateService/FirmwareInventory/MainBoardCPLD")
         r = ibmc.request('GET', resource=uri, headers=headers, data=payload, tmout=30)
         result = r.status_code
         if result == 200:
-            board_json = r.json()
+            cpld_info = r.json()
         else:
-            ibmc.log_error("Get board info failed, the error code is:%d, error info:%s" % (result, str(r.json())))
-        board_menbers = board_json['Members']
-        for board in board_menbers:
-            uri = board["@odata.id"]
-            if "chassisMainboard" in uri.split("/")[-1]:
-                main_board_uri = "https://%s%s" % (ibmc.ip, uri)
-                break
-
-        if main_board_uri != "":
-            r = ibmc.request('GET', resource=main_board_uri, headers=headers, data=payload, tmout=30)
-            result = r.status_code
-            if result == 200:
-                cpld_json = r.json()
-            else:
-                ibmc.log_error("Get cpld info failed, the error code is:%d, error info:%s" % (result, str(r.json())))
+            ibmc.log_error(
+                "Failed to get mainboard cpld info, the error code is: %d, error info is: %s" % (result, str(r.json())))
     except Exception as e:
-        ibmc.log_error("Get cpld info failed:%s" % str(e))
+        ibmc.log_error("Failed to get mainboard cpld info, the error info is: %s" % str(e))
 
-    return cpld_json
+    return cpld_info
 
 
-def get_bmc_bios_info(ibmc, systems_r, manager_r, chassis_r):
+def get_server_info(ibmc, systems_r, manager_r, chassis_r):
     """
     Function:
-        get bmc and bios info
+        get server info
     Args:
-         ibmc (str):   IbmcBaseConnect Object
-         systems_r: Systems resource info
-         manager_r: Manager resource info
-         chassis_r: Chassis resource info
+         ibmc: IbmcBaseConnect Object
+         systems_r:  Systems resource info
+         manager_r:  Manager resource info
+         chassis_r:  Chassis resource info
     Returns:
-        {"BiosVersion": "1.17", "SerialNumber": "42353423", }
+        {"iBMCVersion": "6.50", "BiosVersion": "1.17", "CPLDVersion": "1.04(U108)"}
     Raises:
         Exception
     Examples:
         None
     Author:
-    Date: 10/26/2019
+    Date: 2020/10/9
     """
     js = {}
     summary = {}
 
     try:
-        if 'FirmwareVersion' in manager_r.keys():
-            js['FirmwareVersion'] = manager_r['FirmwareVersion']
-        if 'BiosVersion' in systems_r.keys():
-            js['BiosVersion'] = systems_r['BiosVersion']
-        cpld_resoure = get_cpld_info(ibmc, chassis_r)
-        if 'CPLDVersion' in cpld_resoure:
-            js['CPLDVersion'] = cpld_resoure['CPLDVersion']
-        if 'ProductName' in systems_r['Oem']['Huawei'].keys():
-            js['ProductName'] = systems_r['Oem']['Huawei']['ProductName']
-        if 'Name' in systems_r.keys():
-            js['Name'] = systems_r['Name']
-        if 'UUID' in systems_r.keys():
-            js['UUID'] = systems_r['UUID']
-        if 'AssetTag' in systems_r.keys():
-            js['AssetTag'] = systems_r['AssetTag']
-        if 'Manufacturer' in systems_r.keys():
-            js['Manufacturer'] = systems_r['Manufacturer']
-        if 'Model' in systems_r.keys():
-            js['Model'] = systems_r['Model']
-        if 'HostName' in systems_r.keys():
-            js['HostName'] = systems_r['HostName']
-        if 'PartNumber' in systems_r.keys():
-            js['PartNumber'] = systems_r['PartNumber']
-        if 'SerialNumber' in systems_r.keys():
-            js['SerialNumber'] = systems_r['SerialNumber']
-        if 'PowerState' in systems_r.keys():
-            js['PowerState'] = systems_r['PowerState']
-        if 'Status' in systems_r.keys():
-            js['Status'] = systems_r['Status']['Health']
+        # get iBMC, BIOS, CPLD version
+        js['iBMCVersion'] = manager_r.get('FirmwareVersion')
+        js['BiosVersion'] = systems_r.get('BiosVersion')
+        cpld_info = get_cpld_info(ibmc)
+        js['CPLDVersion'] = cpld_info.get('Version')
 
-        if 'ProcessorSummary' in systems_r.keys():
-            summary['ProcessorSummary'] = systems_r['ProcessorSummary']
-        if 'MemorySummary' in systems_r.keys():
-            summary['MemorySummary'] = systems_r['MemorySummary']
-        if 'StorageSummary' in systems_r['Oem']['Huawei'].keys():
-            summary['StorageSummary'] = systems_r['Oem']['Huawei']['StorageSummary']
-        if 'NetworkAdaptersSummary' in chassis_r['Oem']['Huawei'].keys():
-            summary['NetworkAdaptersSummary'] = chassis_r['Oem']['Huawei']['NetworkAdaptersSummary']
-        if 'PowerSupplySummary' in chassis_r['Oem']['Huawei'].keys():
-            summary['PowerSupplySummary'] = chassis_r['Oem']['Huawei']['PowerSupplySummary']
-        if 'DriveSummary' in chassis_r['Oem']['Huawei'].keys():
-            summary['DriveSummary'] = chassis_r['Oem']['Huawei']['DriveSummary']
-        result = get_fan_info(ibmc, chassis_r)
-        if 'FanSummary' in result['Oem']['Huawei'].keys():
-            summary['FanSummary'] = result['Oem']['Huawei']['FanSummary']
+        # get oem info
+        systems_oem = systems_r['Oem']['Huawei']
+        chassis_oem = chassis_r['Oem']['Huawei']
+
+        # get server basic info
+        js['ProductName'] = systems_oem.get('ProductName')
+        js['Name'] = systems_r.get('Name')
+        js['UUID'] = systems_r.get('UUID')
+        js['AssetTag'] = systems_r.get('AssetTag')
+        js['Manufacturer'] = systems_r.get('Manufacturer')
+        js['Model'] = systems_r.get('Model')
+        js['HostName'] = systems_r.get('HostName')
+        js['PartNumber'] = systems_r.get('PartNumber')
+        js['SerialNumber'] = systems_r.get('SerialNumber')
+        js['PowerState'] = systems_r.get('PowerState')
+        js['Status'] = systems_r['Status']['Health']
+
+        # get summary info
+        summary['ProcessorSummary'] = systems_r.get('ProcessorSummary')
+        summary['MemorySummary'] = systems_r.get('MemorySummary')
+        summary['StorageSummary'] = systems_oem.get('StorageSummary')
+        summary['NetworkAdaptersSummary'] = chassis_oem.get('NetworkAdaptersSummary')
+        summary['PowerSupplySummary'] = chassis_oem.get('PowerSupplySummary')
+        summary['DriveSummary'] = chassis_oem.get('DriveSummary')
+        fan_info = get_fan_info(ibmc, chassis_r)
+        if 'FanSummary' in fan_info['Oem']['Huawei'].keys():
+            summary['FanSummary'] = fan_info['Oem']['Huawei']['FanSummary']
+        else:
+            summary['FanSummary'] = None
         js['Summary'] = summary
 
     except Exception as e:
-        ibmc.log_error("Get bmc and bios info failed:%s" % str(e))
+        ibmc.log_error("Failed to get server info, the error info is: %s" % str(e))
 
     return js
 
 
-def get_basic_info(ibmc):
+def get_sp_info(ibmc):
     """
+    Function:
+        get sp info
     Args:
-         ibmc (str):   IbmcBaseConnect Object
+         ibmc:   IbmcBaseConnect Object
     Returns:
-        {'result':True,'msg': ""}
+        {"result": True, "msg": "Get sp info successful!"}
     Raises:
         Exception
     Examples:
         None
     Author:
-    Date: 10/26/2019
+    Date: 2020/12/09
     """
 
-    file_name = os.path.join(IBMC_REPORT_PATH, "basic_info", "%s_BasicInfo.json" % str(ibmc.ip))
-    ret = {'result': True, 'msg': 'Get basic info successful! For more detail information, '
-                                  'please refer the report log: %s' % file_name}
-    result = {}
+    # Get the return result of the redfish interface
+    request_result_json = get_sp_info_request(ibmc)
 
-    ibmc.log_info("Get basic info start!")
+    if request_result_json == {}:
+        return None
+
+    sp_json = {
+        "Id": request_result_json.get("Id"),
+        "Name": request_result_json.get("Name"),
+        "SPStartEnabled": request_result_json.get("SPStartEnabled"),
+        "SysRestartDelaySeconds": request_result_json.get("SysRestartDelaySeconds"),
+        "SPTimeout": request_result_json.get("SPTimeout"),
+        "SPFinished": request_result_json.get("SPFinished"),
+        "Version": request_result_json.get("Version")
+    }
+    return sp_json
+
+
+def get_sp_info_request(ibmc):
+    """
+
+    Function:
+        Get the return result of the redfish interface
+    Args:
+        ibmc (class): Class that contains basic information about iBMC
+    Returns:
+        SP request info
+    Raises:
+        Get sp resource info failed!
+    Examples:
+        None
+    Author:
+    Date: 2020/09/12
+    """
+    # Obtain the token information of the iBMC
+    token = ibmc.bmc_token
+
+    # URL of the sp service
+    url = ibmc.manager_uri + "/SPService"
+
+    # Initialize headers
+    headers = {'content-type': 'application/json', 'X-Auth-Token': token}
+
+    # Initialize payload
+    payload = {}
+
+    request_result_json = {}
+
     try:
+        # Obtain the sp resource information through the GET method
+        request_result = ibmc.request('GET', resource=url, headers=headers, data=payload, tmout=30)
+        # Obtain error code
+        request_code = request_result.status_code
+        if request_code != 200:
+            ibmc.log_error("Get sp resource info failed! The error code is: %s, "
+                           "The error info is: %s \n" % (str(request_code), str(request_result.json())))
+        else:
+            request_result_json = request_result.json()
+    except Exception as e:
+        ibmc.log_error("Get sp resource info failed! The error info is: %s \n" % str(e))
 
+    return request_result_json
+
+
+def get_basic_info(ibmc, csv_format=False):
+    """
+    Args:
+         ibmc:         IbmcBaseConnect Object
+         csv_format (bool):  Whether to write the result to a CSV file
+    Returns:
+        {"result": True, "msg": "Get basic info successful!"}
+    Raises:
+        Exception
+    Examples:
+        None
+    Author:
+    Date: 2020/10/12
+    """
+
+    # Initialize return information
+    ret = {'result': True, 'msg': ''}
+
+    ibmc.log_info("Start get basic info...")
+    try:
         systems_json = ibmc.get_systems_resource()
         chassis_json = ibmc.get_chassis_resource()
         manager_json = ibmc.get_manager_resource()
-        ibmc.log_info("Get bmc and bios info start!")
-        result['bmc and bios info'] = get_bmc_bios_info(ibmc, systems_json, manager_json, chassis_json)
-        ibmc.log_info("Get cpu info start!")
-        result['cpu info'] = get_cpu_info(ibmc, systems_json)
-        ibmc.log_info("Get drives info start!")
-        result['drives info'] = get_drives_info(ibmc, chassis_json)
-        ibmc.log_info("Get memory info start!")
-        result['memory info'] = get_mem_info(ibmc, systems_json)
+        # get server info
+        result = get_server_info(ibmc, systems_json, manager_json, chassis_json)
+        # get cpu info
+        result['CPUInfo'] = get_cpu_info(ibmc, systems_json)
+        # get drive info
+        result['DriveInfo'] = get_drives_info(ibmc, chassis_json)
+        # get memory info
+        result['MemoryInfo'] = get_mem_info(ibmc, systems_json)
+        # get sp info
+        sp_info = get_sp_info(ibmc)
+        if sp_info is not None:
+            result['SPInfo'] = sp_info
 
     except Exception as e:
-        ibmc.log_error("Get basic info exception! %s" % str(e.message))
+        ibmc.log_error("Get basic info exception! %s" % str(e))
         ret['result'] = False
-        ret['msg'] = "Get basic info exception! %s" % str(e.message)
+        ret['msg'] = "Get basic info exception! %s" % str(e)
         return ret
 
-    # write the result to json file
-    write_result(ibmc, file_name, result)
+    if csv_format is True:
+        # get version info
+        result_csv = []
+        for title in VER_HEADER:
+            if title != "SPVersion":
+                result_csv.append(result.get(title))
+            else:
+                if "SPInfo" in result.keys():
+                    result_csv.append(json.dumps(result["SPInfo"].get("Version")))
+                else:
+                    result_csv.append("")
+
+        # get cpu, memory, drive info
+        cpu_cut = cpu_status = mem_gib = mem_status = drive_cut = drive_status = None
+        try:
+            summary = result["Summary"]
+            cpu_cut = summary["ProcessorSummary"]["Count"]
+            cpu_status = summary["ProcessorSummary"]["Status"]["HealthRollup"]
+            mem_gib = summary["MemorySummary"]["TotalSystemMemoryGiB"]
+            mem_status = summary["MemorySummary"]["Status"]["HealthRollup"]
+            drive_cut = summary["DriveSummary"]["Count"]
+            drive_status = summary["DriveSummary"]["Status"]["HealthRollup"]
+        except Exception as e:
+            ibmc.log_error("Failed to get server summary info, the error info is: %s" % str(e))
+        summary_seq = [cpu_cut, cpu_status, mem_gib, mem_status, drive_cut, drive_status]
+
+        result_csv.extend(summary_seq)
+        VER_HEADER.extend(SUMMARY_HEADER)
+        file_name = os.path.join(IBMC_REPORT_PATH, "basic_info", "%s_BasicInfo.csv" % str(ibmc.ip))
+        # write the result to csv file
+        write_result_csv(ibmc, file_name, VER_HEADER, result_csv)
+    else:
+        file_name = os.path.join(IBMC_REPORT_PATH, "basic_info", "%s_BasicInfo.json" % str(ibmc.ip))
+        # write the result to json file
+        write_result(ibmc, file_name, result)
+
+    ret = {'result': True, 'msg': 'Get basic info successful! For more detail information, '
+                                  'please refer the report log: %s' % file_name}
 
     return ret

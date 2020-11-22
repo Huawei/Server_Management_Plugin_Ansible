@@ -1,11 +1,13 @@
 ---
 - hosts: myhosts
   connection: local
-  name: delete ibmc Account 
+  name: delete ibmc account
   gather_facts: False
 
+# delete_account: The iBMC user name to be deleted.
+
   tasks:
-  - name: delete ibmc Account
+  - name: delete ibmc account
     ibmc_delete_account:
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"

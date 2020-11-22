@@ -66,9 +66,10 @@ def read_bmc_info_by_redfish(ibmc):
     try:
         info = ret['Oem']['Huawei']['RemoteOEMInfo']
         for i in range(0, len(info)):
-            rets += unichr(info[i])
+            rets += chr(info[i])
     except Exception as e:
-        ibmc.log_error(" parse bmc info failed! exception is:%s ret: %s " % (str(e), str(ret)))
+        ibmc.log_error(
+            "parse bmc info failed! exception is:%s ret: %s " % (str(e), str(ret)))
         raise
     return rets.strip()
 
@@ -101,10 +102,12 @@ def write_bmc_info_by_redfish(ibmc, infostr):
     except Exception as e:
         ibmc.log_error("get eTag failed! exception is :%s" % str(e))
         raise
-    headers = {'content-type': 'application/json', 'X-Auth-Token': token, 'If-Match': e_tag}
+    headers = {'content-type': 'application/json',
+               'X-Auth-Token': token, 'If-Match': e_tag}
     payload = {"Oem": {"Huawei": {"RemoteOEMInfo": info}}}
     try:
-        r = ibmc.request('PATCH', resource=ibmc.manager_uri, headers=headers, data=payload, tmout=30)
+        r = ibmc.request('PATCH', resource=ibmc.manager_uri,
+                         headers=headers, data=payload, tmout=30)
         if r.status_code == 200:
             result = True
         elif r.status_code == 412:
@@ -145,17 +148,20 @@ def clear_bmc_info_by_redfish(ibmc):
     except Exception as e:
         ibmc.log_error("get eTag failed! %s" % str(e))
         raise
-    headers = {'content-type': 'application/json', 'X-Auth-Token': token, 'If-Match': e_tag}
+    headers = {'content-type': 'application/json',
+               'X-Auth-Token': token, 'If-Match': e_tag}
     payload = {"Oem": {"Huawei": {"RemoteOEMInfo": info}}}
     try:
-        r = ibmc.request('PATCH', resource=ibmc.manager_uri, headers=headers, data=payload, tmout=30)
+        r = ibmc.request('PATCH', resource=ibmc.manager_uri,
+                         headers=headers, data=payload, tmout=30)
         if r.status_code == 200:
             result = True
         elif r.status_code == 412:
             ibmc.log_error("clear bmc info failed! auth failed!")
             result = False
         else:
-            ibmc.log_error("clear bmc info failed!error code: %s json : %s" % (str(r.status_code), str(r.json())))
+            ibmc.log_error("clear bmc info failed!error code: %s json : %s" % (
+                str(r.status_code), str(r.json())))
             result = False
     except Exception as e:
         ibmc.log_error("clear bmc info failed! Exception is %s" % str(e))
@@ -181,6 +187,7 @@ def deploy_os_process(ibmc, config_dic):
      Author: xwh
      Date: 2019/10/9 20:30
     """
+    log_msg = None
     rets = {"result": False, "msg": "failed"}
     if config_dic.get("os_img"):
         os_img = config_dic.get("os_img")
@@ -204,7 +211,8 @@ def deploy_os_process(ibmc, config_dic):
     xml_body.append(xml_start)
     if "Win" in os_type:
         if config_dic.get("win_os_name"):
-            xml_body.append("   <ostype>%s</ostype>" % config_dic.get("win_os_name"))
+            xml_body.append("   <ostype>%s</ostype>" %
+                            config_dic.get("win_os_name"))
         else:
             log_msg = "param win_os_name can not be None or empty,when you install windows os"
             set_result(ibmc.log_error, log_msg, False, rets)
@@ -218,17 +226,20 @@ def deploy_os_process(ibmc, config_dic):
         xml_body.append("   <cdkey></cdkey>")
 
     if config_dic.get("password"):
-        xml_body.append("   <password>%s</password>" % config_dic.get("password"))
+        xml_body.append("   <password>%s</password>" %
+                        config_dic.get("password"))
     else:
         xml_body.append("   <password></password>")
 
     if config_dic.get("hostname"):
-        xml_body.append("   <hostname>%s</hostname>" % config_dic.get("hostname"))
+        xml_body.append("   <hostname>%s</hostname>" %
+                        config_dic.get("hostname"))
     else:
         xml_body.append("   <hostname></hostname>")
 
     if config_dic.get("language"):
-        xml_body.append("   <language>%s</language>" % config_dic.get("language"))
+        xml_body.append("   <language>%s</language>" %
+                        config_dic.get("language"))
     else:
         if "Win" in os_type:
             log_msg = "param language can not be None or empty"
@@ -237,12 +248,14 @@ def deploy_os_process(ibmc, config_dic):
         xml_body.append("   <language></language>")
 
     if config_dic.get("org_name"):
-        xml_body.append("   <orgname>%s</orgname>" % config_dic.get("org_name"))
+        xml_body.append("   <orgname>%s</orgname>" %
+                        config_dic.get("org_name"))
     else:
         xml_body.append("   <orgname></orgname>")
 
     if config_dic.get("position"):
-        xml_body.append("   <position>%s</position>" % config_dic.get("position"))
+        xml_body.append("   <position>%s</position>" %
+                        config_dic.get("position"))
     else:
         xml_body.append("   <position></position>")
 
@@ -251,13 +264,15 @@ def deploy_os_process(ibmc, config_dic):
         xml_body.append("   <partitions>")
         for partition in partitions:
             if partition.get("partition"):
-                xml_body.append("   <partition>%s</partition>" % partition.get("partition"))
+                xml_body.append("   <partition>%s</partition>" %
+                                partition.get("partition"))
         xml_body.append("   </partitions>")
     else:
         xml_body.append("   <partitions></partitions>")
 
     if config_dic.get("timezone"):
-        xml_body.append("   <timezone>%s</timezone>" % config_dic.get("timezone"))
+        xml_body.append("   <timezone>%s</timezone>" %
+                        config_dic.get("timezone"))
     else:
         xml_body.append("   <timezone></timezone>")
 
@@ -282,7 +297,8 @@ def deploy_os_process(ibmc, config_dic):
         xml_body.append("   <script></script>")
 
     if config_dic.get("software"):
-        xml_body.append("   <software>%s</software>" % config_dic.get("software"))
+        xml_body.append("   <software>%s</software>" %
+                        config_dic.get("software"))
     else:
         xml_body.append("   <software></software>")
 
@@ -319,15 +335,16 @@ def deploy_os_process(ibmc, config_dic):
 
     # set CD as boot device
     ibmc.log_info("set boot device to CD! ")
-    set_boot_dict = {'boot_target': "Cd", 'boot_enabled': "Once", 'boot_mode': "UEFI"}
+    set_boot_dict = {'boot_target': "Cd",
+                     'boot_enabled': "Once", 'boot_mode': "UEFI"}
     set_boot_device(ibmc, set_boot_dict)
 
     # make sure boot device is Cd
     get_boot_device(ibmc)
 
     # mount service iso
-    ret = mount_file(ibmc, service_img)
-    if ret != 202:
+    r = mount_file(ibmc, service_img)
+    if r is False:
         un_mount_file(ibmc)
         log_msg = "mount file failed ,please check the service image is exist or not!"
         set_result(ibmc.log_error, log_msg, False, rets)
@@ -368,13 +385,15 @@ def deploy_os_process(ibmc, config_dic):
                     un_mount_file(ibmc)
                     return rets
                 # write operator and os_type to ibmc
-                ret = write_bmc_info_by_redfish(ibmc, "operator:eSight;osType:" + os_type)
+                ret = write_bmc_info_by_redfish(
+                    ibmc, "operator:eSight;osType:" + os_type)
                 if ret is not True:
                     log_msg = "write Bmc Info failed ,step1 failed!"
                     set_result(ibmc.log_error, log_msg, False, rets)
                     un_mount_file(ibmc)
                     return rets
-                set_boot_dict = {'boot_target': "Cd", 'boot_enabled': "Once", 'boot_mode': "Legacy"}
+                set_boot_dict = {'boot_target': "Cd",
+                                 'boot_enabled': "Once", 'boot_mode': "Legacy"}
                 set_boot_device(ibmc, set_boot_dict)
             except Exception as e:
                 ibmc.log_Info("write bmc info exception %s" % str(e))
@@ -387,7 +406,8 @@ def deploy_os_process(ibmc, config_dic):
                 else:
                     ret = manage_power(ibmc, "ForceRestart")
             except Exception as e:
-                ibmc.log_info("manger power exception ,exception is : %s" % str(e))
+                ibmc.log_info(
+                    "manger power exception ,exception is : %s" % str(e))
                 continue
             ibmc.log_info("reboot system again %s " % str(ret))
             loop = 0
@@ -400,12 +420,15 @@ def deploy_os_process(ibmc, config_dic):
                 break
             if ret.find("result:failed") >= 0:
                 ibmc.log_info("progress:step1;result:failed")
-                info_group = re.match(r".*result:failed;errorCode:(\d+).*", ret)
+                info_group = re.match(
+                    r".*result:failed;errorCode:(\d+).*", ret)
                 if info_group:
                     if SERVER_CD_ERROR_CODE.get(str(info_group.group(1))):
-                        log_msg = SERVER_CD_ERROR_CODE.get(str(info_group.group(1)))
+                        log_msg = SERVER_CD_ERROR_CODE.get(
+                            str(info_group.group(1)))
                     else:
-                        log_msg = "unknow error, error code: %s " % info_group.group(1)
+                        log_msg = "unknow error, error code: %s " % info_group.group(
+                            1)
                 else:
                     log_msg = "unknow error; ret:%s" % str(ret)
                 loop_count = MAX_RETRY_CNT
@@ -519,9 +542,11 @@ def deploy_os_process(ibmc, config_dic):
             info_group = re.match(r".*result:failed;errorCode:(\d+).*", ret)
             if info_group:
                 if SERVER_CD_ERROR_CODE.get(str(info_group.group(1))):
-                    log_msg = SERVER_CD_ERROR_CODE.get(str(info_group.group(1)))
+                    log_msg = SERVER_CD_ERROR_CODE.get(
+                        str(info_group.group(1)))
                 else:
-                    log_msg = "unknow error,error code: %s" % info_group.group(1)
+                    log_msg = "unknow error,error code: %s" % info_group.group(
+                        1)
             else:
                 log_msg = "unknow error; ret:%s" % str(ret)
             log_msg = "%s; install OS %s  failed! " % (log_msg, os_type)
@@ -537,8 +562,8 @@ def deploy_os_process(ibmc, config_dic):
     if ret is True:
         un_mount_file(ibmc)
     # make sure OS image is mounted!!!!
-    ret = mount_file(ibmc, os_img)
-    if ret != 202:
+    r = mount_file(ibmc, os_img)
+    if r is False:
         un_mount_file(ibmc)
         log_msg = "install OS %s  failed! please check the OS image is exist or not!" % os_type
         set_result(ibmc.log_error, log_msg, False, rets)
@@ -572,21 +597,26 @@ def deploy_os_process(ibmc, config_dic):
                 log_msg = ""
                 ret = read_bmc_info_by_redfish(ibmc)
             except Exception as e:
-                ibmc.log_info("red bmc info exception ! exception  is:%s" % str(e))
+                ibmc.log_info(
+                    "read bmc info exception ! exception  is:%s" % str(e))
                 continue
-            ibmc.log_info("loop_install: %s install os: %s" % (str(loop_install), str(ret)))
+            ibmc.log_info("loop_install: %s install os: %s" %
+                          (str(loop_install), str(ret)))
 
             if ret.find("result:5") != -1:
                 log_msg = "install OS %s  successfully! " % os_type
                 set_result(ibmc.log_info, log_msg, True, rets)
                 return rets
             elif ret.find("result:failed") != -1:
-                info_group = re.match(r".*result:failed;errorCode:(\d+).*", ret)
+                info_group = re.match(
+                    r".*result:failed;errorCode:(\d+).*", ret)
                 if info_group:
                     if SERVER_CD_ERROR_CODE.get(str(info_group.group(1))):
-                        log_msg = SERVER_CD_ERROR_CODE.get(str(info_group.group(1)))
+                        log_msg = SERVER_CD_ERROR_CODE.get(
+                            str(info_group.group(1)))
                     else:
-                        log_msg = "unknow error error code: %s " % info_group.group(1)
+                        log_msg = "unknow error error code: %s " % info_group.group(
+                            1)
                 else:
                     log_msg = "unknow error; ret:%s" % str(ret)
                 log_msg = "%s; install OS %s  failed! " % (log_msg, os_type)

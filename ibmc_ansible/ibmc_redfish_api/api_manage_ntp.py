@@ -13,7 +13,7 @@
 import requests
 
 from ibmc_ansible.utils import set_result
-from api_manage_ibmc_ip import get_ibmc_ip_request
+from .api_manage_ibmc_ip import get_ibmc_ip_request
 
 NTP_DICT = {
     "ipv4": "IPv4",

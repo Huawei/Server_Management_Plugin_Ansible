@@ -10,6 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import log, report
+from ibmc_ansible.ibmc_redfish_api.api_outband_fw_update import update_fw
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import ansible_ibmc_run_module
+
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
@@ -67,13 +74,6 @@ EXAMPLES = r"""
 RETURNS = """
    
 """
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_outband_fw_update import update_fw
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module
 
 
 def ibmc_outband_fw_update_module(module):

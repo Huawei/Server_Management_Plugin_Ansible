@@ -1,11 +1,11 @@
 ---
 - hosts: myhosts
   connection: local
-  name: get ibmc Account 
+  name: get ibmc account
   gather_facts: False
 
   tasks:
-  - name: get ibmc Account
+  - name: get ibmc account
     ibmc_get_account:
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"

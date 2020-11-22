@@ -10,19 +10,29 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-IBMC_REPORT_PATH = "/var/log/ansible/ibmc/report"
-IBMC_LOG_PATH = "/var/log/ansible/ibmc/log"
-IBMC_EXCU_PATH = "/home/ibmc_ansible"
-MSG_FORMAT = "%s -- %s"
-
+import csv
 import json
 import logging
 import logging.handlers as handlers
 import os
 import re
 import subprocess
+try:
+    import ConfigParser as cp
+except ImportError:
+    import configparser as cp
 
-import ConfigParser
+IBMC_REPORT_PATH = "/var/log/ansible/ibmc/report"
+IBMC_LOG_PATH = "/var/log/ansible/ibmc/log"
+IBMC_EXCU_PATH = "/home/ibmc_ansible"
+MSG_FORMAT = "%s -- %s"
+
+# Switch type
+SERVERSWITYPE = 2
+# Hmm type
+SERVERHMMTYPE = 1
+# Server type
+SERVERTYPE = 0
 
 
 def set_result(log_function, msg, result, ret):
@@ -127,7 +137,7 @@ def write_result(ibmc, result_file, result):
     Returns:
         None
     Raises:
-        None
+        IOError
     Examples:
         None
     Author:
@@ -138,18 +148,57 @@ def write_result(ibmc, result_file, result):
         # Create a path if the path does not exist
         result_path = os.path.dirname(result_file)
         if not os.path.exists(result_path):
-            subprocess.call("mkdir -p %s" % result_path, shell=True)
+            subprocess.call(["mkdir", "-p", result_path], shell=False)
         # Write the results to the file as an overlay
         json_file = open(result_file, "w")
         if json_file and result:
             json.dump(result, json_file, indent=4)
     except IOError as e:
-        ibmc.log_error("failed to write result to %s, The error info is: %s" % (result_file, str(e)))
-        ibmc.report_error("failed to write result to %s" % result_file)
-        raise IOError("Failed to write result to %s, The error info is: %s" % (result_file, str(e)))
+        ibmc.log_error("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
+        ibmc.report_error("Failed to write result to %s" % result_file)
+        raise IOError("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
     finally:
         if json_file is not None:
             json_file.close()
+
+
+def write_result_csv(ibmc, result_file, header_csv, result_csv):
+    """
+
+    Function:
+        Write the result to a csv file
+    Args:
+              ibmc              (class):   Class that contains basic information about iBMC
+              result_file       (str):     result file
+              header_csv        (list):    csv header
+              result_csv        (list):    csv result data
+    Returns:
+        None
+    Raises:
+        IOError
+    Examples:
+        None
+    Author:
+    Date: 2020/10/9
+    """
+    csv_file = None
+    try:
+        # Create a path if the path does not exist
+        result_path = os.path.dirname(result_file)
+        if not os.path.exists(result_path):
+            subprocess.call(["mkdir", "-p", result_path], shell=False)
+        # Write the results to the csv file
+        csv_file = open(result_file, 'w')
+        csv_writer = csv.writer(csv_file)
+        csv_writer.writerow(header_csv)
+        csv_writer.writerow(result_csv)
+    except IOError as e:
+        ibmc.log_error("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
+        ibmc.report_error("Failed to write result to %s" % result_file)
+        raise IOError("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
+    finally:
+        if csv_file is not None:
+            csv_file.close()
 
 
 def validate_ipv4(ip_str):
@@ -287,7 +336,7 @@ def read_ssl_verify(log):
     """
 
     try:
-        cfg = ConfigParser.ConfigParser()
+        cfg = cp.ConfigParser()
         cfg_path = os.path.join(IBMC_EXCU_PATH, "ssl.cfg")
         cfg.read(cfg_path)
         verify = cfg.get("ssl", "verify")
@@ -319,7 +368,7 @@ def read_ssl_force_tls(log):
     """
 
     try:
-        cfg = ConfigParser.ConfigParser()
+        cfg = cp.ConfigParser()
         cfg_path = os.path.join(IBMC_EXCU_PATH, "ssl.cfg")
         cfg.read(cfg_path)
         verify = cfg.get("ssl", "force_tls1_2")
@@ -360,3 +409,59 @@ def set_ssl_cfg(verify, force_tls1_2, log):
     except Exception as e:
         log.error("set ssl_cfg failed, exception is : %s" % str(e))
     return False
+
+
+def check_serverType(ibmc):
+    """
+    Function:
+        check serverType:
+
+    Args:
+         ibmc (str):   IbmcBaseConnect Object
+    Returns:
+            1: Hmm type
+            2: Switch type
+            0: Server type
+    Raises:
+       Exception
+    Examples:
+       None
+    Author:
+    Date: 10/10/2020
+    """
+    serverid = ibmc.chassis_uri.split('/')[-1].lower()
+    if "hmm" in serverid:
+        return 1
+    elif "swi" in serverid:
+        return 2
+    else:
+        return 0
+
+
+def is_support_server(ibmc, type):
+    """
+    Function:
+
+    Args:
+        ibmc (str):   IbmcBaseConnect Object
+        type:   SERVERTYPE,
+                SERVERSWITYPE,
+                SERVERHMMTYPE
+    Returns:
+            ret{"result":False,"msg": 'The function is not supported!'}
+    Raises:
+       Exception
+    Examples:
+       None
+    Author:
+    Date: 10/10/2020
+    """
+    ret = {"result": False, "msg": ''}
+    type_code = check_serverType(ibmc)
+    if type_code == type:
+        ret['result'] = True
+    else:
+        ibmc.log_error("The function is not supported!")
+        ret['result'] = False
+        ret['msg'] = "The function is not supported!"
+    return ret

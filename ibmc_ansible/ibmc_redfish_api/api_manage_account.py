@@ -40,19 +40,19 @@ def format_role_id(ibmc, role_id):
         "customrole3": "CustomRole3",
         "customrole4": "CustomRole4"
     }
-    role_id = rold_id_dic.get(role_id.lower())
-    if role_id is None:
-        raise Exception("format role id faile, please check role id if in %s" % str(
-            rold_id_dic.values()))
-    return role_id
+    format_role_id = rold_id_dic.get(role_id.lower())
+    if format_role_id is None:
+        raise Exception("The role id: %s is incorrect, please check whether the role id exists in %s" %
+                        (str(role_id), str(rold_id_dic.values())))
+    return format_role_id
 
 
 def get_accounts(ibmc):
     """
     Args:
-            ibmc            (str):   IbmcBaseConnect 对象
+            ibmc            :   IbmcBaseConnect 对象
     Returns:
-        {'result':True,'msg': "accounts info"}
+        {'result':True,'msg': "Account obtained successfully, users list as follow: userid=2 ,userName=Administrator"}
     Raises:
         Exception
     Examples:
@@ -69,17 +69,16 @@ def get_accounts(ibmc):
         IBMC_REPORT_PATH, "account_info/%s_AccountInfo.json" % str(ibmc.ip))
 
     try:
-        r = ibmc.request('GET', resource=uri, headers=headers, data=payload, tmout=10)
+        r = ibmc.request('GET', resource=uri, headers=headers,
+                         data=payload, tmout=10)
     except Exception as e:
-        ibmc.log_error("getAccounts send command exception %s" % str(e))
-        raise Exception("getAccounts send command exception exception is: %s" % str(e))
+        ibmc.log_error("Failed to get accounts! The error info is: %s" % str(e))
+        raise Exception("Failed to get accounts! The error info is: %s" % str(e))
 
     try:
         result = r.status_code
         if result == 200:
-            ibmc.log_info("Get accounts successful!")
-
-            log_msg = "get account successful,users list as follow:  "
+            log_msg = "Account obtained successfully, users list as follow:"
 
             if not "Members" in list(r.json().keys()):
                 set_result(ibmc.log_info, log_msg, True, ret)
@@ -90,26 +89,31 @@ def get_accounts(ibmc):
             list_json = []
             for each_members in r.json()[u"Members"]:
                 uri = "https://%s%s" % (ibmc.ip, each_members["@odata.id"])
-                r = ibmc.request('GET', resource=uri, headers=headers, data=payload, tmout=10)
+                r = ibmc.request('GET', resource=uri,
+                                 headers=headers, data=payload, tmout=10)
                 result = r.status_code
                 if result == 200:
                     eachjson = r.json()
-                    log_msg = "%s userid=%s ,userName=%s :: " % (log_msg, eachjson[u"Id"], eachjson[u"UserName"])
+                    log_msg = "%s userid=%s, username=%s; |" % (
+                        log_msg, eachjson[u"Id"], eachjson[u"UserName"])
                     list_json.append(eachjson)
                 else:
-                    log_msg = "get each id account  failed  respon json is: %s \n" % str(r.json())
+                    log_msg = "Failed to get each id account! The response json is: %s" % str(
+                        r.json())
                     set_result(ibmc.log_error, log_msg, False, ret)
                     return ret
 
-            log_msg = "%s for more detail please refer to %s" % (log_msg, filename)
+            log_msg = "%s For more detail please refer to %s" % (
+                log_msg, filename)
         else:
-            log_msg = 'get account  failed! the error code is %s' % result
+            log_msg = 'Failed to get accounts! The error code is: %s' % result
             set_result(ibmc.log_error, log_msg, False, ret)
             return ret
     except Exception as e:
-        log_msg = "get account  exception! exception is:%s" % str(e)
+        log_msg = "Get accounts exception! The exception info is: %s" % str(e)
         set_result(ibmc.log_error, log_msg, False, ret)
         return ret
+
     for each_dic in list_json:
         each_dic.pop("@odata.type")
         each_dic.pop("Links")
@@ -128,9 +132,9 @@ def get_accounts(ibmc):
 def get_account_id(ibmc, username):
     """
     Args:
-            username            (str):   account name  
+            username            (str):   account name
     Returns:
-        None
+        account id
     Raises:
         None
     Examples:
@@ -143,10 +147,11 @@ def get_account_id(ibmc, username):
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
     payload = {}
     try:
-        r = ibmc.request('GET', resource=uri, headers=headers, data=payload, tmout=10)
+        r = ibmc.request('GET', resource=uri, headers=headers,
+                         data=payload, tmout=10)
     except Exception as e:
-        ibmc.log_error("get_account_id send command exception" % str(e))
-        raise Exception("get_account_id send command exception" % str(e))
+        ibmc.log_error("Failed to get account id! The error info is: %s" % str(e))
+        raise Exception("Failed to get account id! The error info is: %s" % str(e))
     try:
         result = r.status_code
         if result == 200:
@@ -156,7 +161,8 @@ def get_account_id(ibmc, username):
                 return None
             for each_members in r.json()[u"Members"]:
                 uri = "https://%s%s" % (ibmc.ip, each_members["@odata.id"])
-                r = ibmc.request('GET', resource=uri, headers=headers, data=payload, tmout=10)
+                r = ibmc.request('GET', resource=uri,
+                                 headers=headers, data=payload, tmout=10)
                 result = r.status_code
                 if result == 200:
                     each_json = r.json()
@@ -164,11 +170,11 @@ def get_account_id(ibmc, username):
                         return each_json['Id']
                 else:
                     ibmc.log_error(
-                        "get each id account failed; respone json is: %s \n" % str(r.json()))
-                    raise Exception("get each id account exception ")
+                        "Failed to get each account id! The response json is: %s \n" % str(r.json()))
+                    raise Exception("Failed to get each account id!")
 
     except Exception as e:
-        ibmc.log_error("get_account_id failed! exception is :%s " % str(e))
+        ibmc.log_error("Failed to get account id! The exception info is: %s" % str(e))
         raise
     return None
 
@@ -178,7 +184,7 @@ def delete_account(ibmc, username):
     Args:
             username            (str):   account name
     Returns:
-        None
+        {"result": True, "msg": "Account deleted successfully!"}
     Raises:
         None
     Examples:
@@ -189,8 +195,8 @@ def delete_account(ibmc, username):
     ret = {'result': True, 'msg': ''}
     account_id = get_account_id(ibmc, username)
     if account_id is None:
-        ret = {'result': False, 'msg': 'can not find username '}
-        ibmc.log_error("can not find username ")
+        log_msg = "The username: %s to be deleted cannot be found." % str(username)
+        set_result(ibmc.log_error, log_msg, False, ret)
         return ret
 
     uri = "%s/AccountService/Accounts/%s" % (ibmc.root_uri, account_id)
@@ -199,33 +205,34 @@ def delete_account(ibmc, username):
     payload = {}
 
     try:
-        r = ibmc.request('DELETE', resource=uri, headers=headers, data=payload, tmout=10)
+        r = ibmc.request('DELETE', resource=uri,
+                         headers=headers, data=payload, tmout=10)
     except Exception as e:
-        ibmc.log_error("delete_account send command exception %s" % str(e))
-        raise Exception("delete_account send command exception %s" % str(e))
+        ibmc.log_error("Failed to delete account! The exception info is: %s" % str(e))
+        raise Exception("Failed to delete account! The exception info is: %s" % str(e))
     try:
         result = r.status_code
         if result == 200:
-            log_msg = "delete account successful!"
+            log_msg = "The iBMC account: %s deleted successfully!" % str(username)
             set_result(ibmc.log_info, log_msg, True, ret)
         else:
-            log_msg = "delete account faile ;respon json is: %s " % str(r.json())
+            log_msg = "Failed to delete account! The response json is: %s" % str(r.json())
             set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        log_msg = 'delete account exception; exception is：%s' % str(e)
+        log_msg = 'Delete account exception! The exception info is：%s' % str(e)
         set_result(ibmc.log_error, log_msg, False, ret)
     return ret
 
 
-def create_account(ibmc, account, new_password, role_id, id=None):
+def create_account(ibmc, new_account, new_password, role_id, id=None):
     """
     Args:
-            account            (str):  user account 
-            new_password       (str):  new password
-            role_id             (str):  roled id 
-            id                 (str):  
+            new_account            (str):  user account
+            new_password           (str):  new password
+            role_id                (str):  roled id
+            id                     (str):  user id
     Returns:
-        {'result':True,'msg': ''}
+        {"result": True, "msg": "The account is created successfully!"}
     Raises:
         Exception
     Examples:
@@ -237,48 +244,60 @@ def create_account(ibmc, account, new_password, role_id, id=None):
     try:
         role_id = format_role_id(ibmc, role_id)
     except Exception as e:
-        log_msg = "create account  failed! %s" % str(e)
+        log_msg = "Failed to create account! %s" % str(e)
         set_result(ibmc.log_error, log_msg, False, ret)
-        return ret 
+        return ret
+
+    # Check whether the user name exists
+    account_id = get_account_id(ibmc, new_account)
+    if account_id is not None:
+        log_msg = "Failed to create account! the username: %s exists" % str(new_account)
+        set_result(ibmc.log_error, log_msg, False, ret)
+        return ret
+
     uri = "%s/AccountService/Accounts/" % ibmc.root_uri
     token = ibmc.get_token()
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
     payload = {}
-    payload[u"UserName"] = account
+    payload[u"UserName"] = new_account
     payload[u"Password"] = new_password
     payload[u"RoleId"] = role_id
     if not id is None:
         payload["Id"] = id
 
     try:
-        r = ibmc.request('POST', resource=uri, headers=headers, data=payload, tmout=10)
+        r = ibmc.request('POST', resource=uri,
+                         headers=headers, data=payload, tmout=10)
     except Exception as e:
-        ibmc.log_error(" create_account send command exception; exception is %s" % str(e))
-        raise Exception("create_account send command exception; exception is:%s" % (str(e)))
+        ibmc.log_error(
+            "Failed to create account! The exception info is: %s" % str(e))
+        raise Exception(
+            "Failed to create account! The exception info is: %s" % (str(e)))
 
     try:
         result = r.status_code
         if result == 201:
-            log_msg = "create account successful!"
+            log_msg = "The account is created successfully!"
             set_result(ibmc.log_info, log_msg, True, ret)
         else:
-            error_msg = r.json().get("error").get('@Message.ExtendedInfo')[0].get("Message")
+            error_msg = r.json().get("error").get(
+                '@Message.ExtendedInfo')[0].get("Message")
             if r.json().get("error").get('@Message.ExtendedInfo')[0].get("Message") is None:
                 error_msg = str(r.json())
-            log_msg = "create account failed ! error message is: %s \n" % error_msg
+            log_msg = "Failed to create account! The error message is: %s \n" % error_msg
             set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        log_msg = "create account  failed! %s" % str(e)
-        set_result(ibmc.log_error, log_msg, False, ret)    
+        log_msg = "Failed to create account! The error info is: %s" % str(e)
+        set_result(ibmc.log_error, log_msg, False, ret)
     return ret
 
 
 def modify_account(ibmc, config_dic):
     """
     Args:
-            config_dic            (dic)    
+            config_dic            (dic):  iBMC user info
     Returns:
-        {'result':True,'msg': ''}
+        {'result':True,'msg': 'Account modified successfully!'}
     Raises:
         Exception
     Examples:
@@ -289,10 +308,14 @@ def modify_account(ibmc, config_dic):
     uri = "%s/AccountService/Accounts/" % ibmc.root_uri
 
     ret = {'result': False, 'msg': ''}
-    account_id = get_account_id(ibmc, config_dic.keys()[0])
+    if len(config_dic) != 1:
+        log_msg = "iBMC user info can not be found."
+        set_result(ibmc.log_error, log_msg, False, ret)
+        return ret
+    account_id = get_account_id(ibmc, str(list(config_dic.keys())[0]))
     if account_id is None:
-        log_msg = "can not find username"
-        set_result(ibmc.log_error, log_msg, False, ret)    
+        log_msg = "The username: %s to be modified cannot be found." % str(list(config_dic.keys())[0])
+        set_result(ibmc.log_error, log_msg, False, ret)
         return ret
     uri = uri + account_id
     payload = config_dic.values()[0]
@@ -303,23 +326,26 @@ def modify_account(ibmc, config_dic):
                'X-Auth-Token': token, 'If-Match': Etag}
     ret = {'result': True, 'msg': ''}
     try:
-        r = ibmc.request('PATCH', resource=uri,
-                         headers=headers, data=payload, tmout=10)
+        r = ibmc.request('PATCH', resource=uri, headers=headers, data=payload, tmout=10)
     except Exception as e:
-        ibmc.log_error("modify_account send command exception :%s" % str(e))
-        raise Exception("modify_account send command exception %s " % str(e))
+        ibmc.log_error("Failed to modify account, the exception info is: %s" % str(e))
+        raise Exception("Failed to modify account, the exception info is: %s" % str(e))
 
     try:
         result = r.status_code
         if result == 200:
-            log_msg = "modify account successful! return json is: %s" % (
-                str(r.json()))
-            set_result(ibmc.log_info, log_msg, True, ret)
+            if r.json().get("@Message.ExtendedInfo"):
+                log_msg = "Partially succeeded in modifying the account, the detailed information is: %s" % str(
+                    r.json().get("@Message.ExtendedInfo"))
+                set_result(ibmc.log_info, log_msg, True, ret)
+            else:
+                log_msg = "Account modified successfully!"
+                set_result(ibmc.log_info, log_msg, True, ret)
         else:
-            log_msg = "modify account failed! return json is: %s" % (
+            log_msg = "Failed to modify account, the response info is: %s" % (
                 str(r.json()))
-            set_result(ibmc.log_Error, log_msg, False, ret)
+            set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        log_msg = "modify account  failed! %s" % str(e)
+        log_msg = "Failed to modify account, the exception info is: %s" % str(e)
         set_result(ibmc.log_error, log_msg, False, ret)
     return ret

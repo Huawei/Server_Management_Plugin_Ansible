@@ -10,15 +10,23 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'status': ['preview'],
+    'supported_by': 'community'
+}
 
 DOCUMENTATION = """
+---
 module: ibmc_delete_account
-short_description: delete bmc account by username 
+
+short_description: delete an ibmc user
+
 version_added: "2.5.0"
-description: delete bmc account by username 
+
+description:
+    - "Delete an ibmc user"
+
 options:
   ibmc_ip:
     required: true
@@ -34,24 +42,25 @@ options:
     required: true
     default:
     description:
-      - iBMC user password used for authentication 
+      - iBMC user password used for authentication
   delete_account:
     required: true
-    default: 
+    default: None
     description:
-      - iBMC account witch you want to delete     
+      - The iBMC user name to be deleted
 """
+
 EXAMPLES = r"""
- - name:  ibmc delete account 
+ - name: delete ibmc account
     ibmc_delete_account :
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}" 
-      delete_account: "test1"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      delete_account: "test"
 """
 
 RETURNS = """
-
+    {"result": True, "msg": "Account deleted successfully!"}
 """
 
 from ansible.module_utils.basic import AnsibleModule

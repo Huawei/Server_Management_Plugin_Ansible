@@ -289,7 +289,7 @@ def create_raid(ibmc, raid_info):
         Create RAID configuration
     Args:
               ibmc                    (class):    Class that contains basic information about iBMC
-              raid_info               (list):     User-set RAID information
+              raid_info               (dict):     User-set RAID information
     Returns:
          {"result": True, "msg": "Create RAID configuration successful!"}
     Raises:
@@ -645,7 +645,7 @@ def delete_raid(ibmc, raid_info):
         Delete RAID configuration
     Args:
               ibmc                    (class):    Class that contains basic information about iBMC
-              raid_info               (list):     User-set RAID information
+              raid_info               (dict):     User-set RAID information
     Returns:
         None
     Raises:
@@ -851,7 +851,7 @@ def modify_raid(ibmc, raid_info):
         Modify RAID configuration
     Args:
               ibmc                    (class):    Class that contains basic information about iBMC
-              raid_info               (list):     User-set RAID information
+              raid_info               (dict):     User-set RAID information
     Returns:
         None
     Raises:

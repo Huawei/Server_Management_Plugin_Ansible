@@ -10,6 +10,14 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
+import os
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import log, report
+from ibmc_ansible.ibmc_redfish_api.api_server_profile import server_profile
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
+
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
@@ -69,14 +77,6 @@ EXAMPLES = r"""
 RETURNS = """
 
 """
-import os
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_server_profile import server_profile
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module
-
 
 
 def ibmc_server_profile_module(ansible_module):
@@ -95,13 +95,15 @@ def ibmc_server_profile_module(ansible_module):
     Author: xwh
     Date: 2019/10/9 20:30
     """
-    ret = {"result": False, "msg": 'not run server profile yet'}
     with IbmcBaseConnect(ansible_module.params, log, report) as ibmc:
-        if ansible_module.params.get("file_name") is None or ansible_module.params.get("file_name") == "":
-            profile = os.path.join( ansible_module.params.get("file_path"), "%s_profile.xml" % ansible_module.params.get("ibmc_ip"))
-        else:
-            profile = os.path.join ( ansible_module.params.get("file_path"), ansible_module.params.get("file_name"))  
-        ret = server_profile(ibmc,profile , ansible_module.params["command"])
+        ret = is_support_server(ibmc, SERVERTYPE)
+        if ret['result']:
+            if ansible_module.params.get("file_name") is None or ansible_module.params.get("file_name") == "":
+                profile = os.path.join(ansible_module.params.get("file_path"),
+                                       "%s_profile.xml" % ansible_module.params.get("ibmc_ip"))
+            else:
+                profile = os.path.join(ansible_module.params.get("file_path"), ansible_module.params.get("file_name"))
+            ret = server_profile(ibmc, profile, ansible_module.params["command"])
     return ret
 
 

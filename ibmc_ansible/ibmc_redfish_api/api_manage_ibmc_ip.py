@@ -256,7 +256,7 @@ def get_ibmc_ip_request(ibmc):
     Function:
         Get the return result of the redfish interface
     Args:
-              ibmc            (str):   Class that contains basic information about iBMC
+              ibmc            :   Class that contains basic information about iBMC
     Returns:
         result of the redfish interface
     Raises:

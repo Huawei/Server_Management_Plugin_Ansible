@@ -67,7 +67,7 @@ def sp_api_get_status(ibmc):
 def sp_api_set_sp_service(ibmc, sp_enable, restart_timeout=30, deploy_timeout=7200, deploy_status=True):
     """
     Args:
-            sp_enable                 (str): enable the sp
+            sp_enable                 (bool): enable the sp
             restart_timeout           (str): restart time
             deploy_timeout          (str): sp deploy time out
             deploy_status             (bool): sp deploy status
@@ -149,7 +149,7 @@ def sp_api_set_fw_upgrade(ibmc, image_url, signal_url, image_type="Firmware", pa
             log_msg = "set sp_api_set_fw_upgrade error info is: %s \n" % str(r.json())
             set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        log_msg = "set FwUpgrade failed!" % (str(e))
+        log_msg = "set FwUpgrade failed! %s " % str(e)
         set_result(ibmc.log_error, log_msg, False, ret)
     return ret
 
@@ -182,13 +182,15 @@ def sp_api_get_fw_info(ibmc):
             if r.json().get("PCIeCards"): # PCIeCards is empty or do not has the key PCIeCards should raise 
                 ret["fwInfo"] = r.json().get("PCIeCards") 
             else:
-                ibmc.log_error("get FWInfo failed! do not has keys PCIeCards or PCIeCards is empty ;Maybe you should start sp once")
-                raise Exception("get FWInfo failed! do not has keys PCIeCards or PCIeCards is empty;Maybe you should start sp once")
+                ibmc.log_error("get FWInfo failed! do not has keys PCIeCards or PCIeCards is empty ;"
+                               "Maybe you should start sp once")
+                raise Exception("get FWInfo failed! do not has keys PCIeCards or PCIeCards is empty;"
+                                "Maybe you should start sp once")
         else:
             log_msg = "get FwInfo error info is: %s \n" % str(r.json())
             set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        ibmc.log_error("get FWInfo failed!%s" % str(e))
+        ibmc.log_error("get FWInfo failed! %s" % str(e))
         raise
     return ret
 
@@ -224,7 +226,7 @@ def sp_api_get_fw_update_id(ibmc):
             log_msg = "set sp api get fw updateId error info is: %s \n" % str(r.json())
             set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        log_msg = "sp api get fw updateId failed!" % str(e)
+        log_msg = "sp api get fw updateId failed! %s" % str(e)
         set_result(ibmc.log_error, log_msg, False, ret)
     return ret
 
@@ -330,7 +332,7 @@ def sp_api_get_result_info(ibmc, result_id="1"):
             log_msg = "set sp api get result info error info is: %s \n" % str(r.json())
             set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        log_msg = "sp api get result info failed!" % str(e)
+        log_msg = "sp api get result info failed! %s " % str(e)
         set_result(ibmc.log_error, log_msg, False, ret)
     return ret
 
@@ -427,6 +429,8 @@ def sp_upgrade_fw_process(ibmc, file_path_list):
 
     result_dic = {}
     config_list = file_path_list
+    i = -1
+    filelist = None
     if config_list != []:
         for each_items in config_list:
             fw_file_uri = each_items
@@ -518,7 +522,7 @@ def sp_upgrade_fw_process(ibmc, file_path_list):
         try:
             ret = sp_api_get_result_info(ibmc, result_id=upgrade_id)
         except Exception as e:
-            ibmc.log_error("get upgrade result exception " % str(e))
+            ibmc.log_error("get upgrade result exception %s" % str(e))
             continue
 
         if ret['result'] is True:

@@ -103,6 +103,7 @@ def server_profile(ibmc, file_path, command):
             command)
         set_result(ibmc.log_error, log_msg, False, rets)
         return rets
+    cnt = -1
     try:
         code = r.status_code
         data = r.json()

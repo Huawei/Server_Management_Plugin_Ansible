@@ -10,6 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import log, report
+from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import sp_upgrade_fw_process
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
+
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
@@ -68,13 +75,6 @@ RETURNS = """
     
 """
 
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import sp_upgrade_fw_process
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module
-
 
 def ibmc_inband_fw_update_module(module):
     """
@@ -92,19 +92,19 @@ def ibmc_inband_fw_update_module(module):
     Author: xwh
     Date: 2019/10/9 20:30
     """
-    ret = {"result": False, "msg": 'not run update inband firmware yet'}
-
     with IbmcBaseConnect(module.params, log, report) as ibmc:
-        file_path_list = []
-        for each_item in module.params["image_url"]:
-            if 'nfs' in each_item.lower() or (not module.params.has_key("file_server_user")) or (
-                    module.params["file_server_user"] is ''):
-                file_path_list.append(each_item)
-            else:
-                file_url = each_item.replace("://", "://%s:%s@" % (
-                    module.params["file_server_user"], module.params["file_server_pswd"]))
-                file_path_list.append(file_url)
-        ret = sp_upgrade_fw_process(ibmc, file_path_list)
+        ret = is_support_server(ibmc, SERVERTYPE)
+        if ret['result']:
+            file_path_list = []
+            for each_item in module.params["image_url"]:
+                if 'nfs' in each_item.lower() or ("file_server_user" not in module.params) or (
+                            module.params["file_server_user"] is ''):
+                    file_path_list.append(each_item)
+                else:
+                    file_url = each_item.replace("://", "://%s:%s@" % (
+                        module.params["file_server_user"], module.params["file_server_pswd"]))
+                    file_path_list.append(file_url)
+            ret = sp_upgrade_fw_process(ibmc, file_path_list)
     return ret
 
 

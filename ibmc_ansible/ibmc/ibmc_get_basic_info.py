@@ -10,17 +10,22 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'status': ['preview'],
+    'supported_by': 'community'
+}
 
 DOCUMENTATION = """
 module: ibmc_get_account
-short_description: get ibmc basic info 
+
+short_description: get server information
+
 version_added: "2.5.0"
-description: get ibmc basic info 
+
+description: "Obtain the iBMC, BIOS, CPLD version and SP, CPU, memory, drive information"
+
 options:
-  
   ibmc_ip:
     required: true
     default: None
@@ -33,9 +38,17 @@ options:
       - iBMC user name used for authentication
   ibmc_pswd:
     required: true
-    default: 
+    default: None
     description:
-      - iBMC user passwore used for authentication 
+      - iBMC user password used for authentication
+  csv_format:
+    required: false
+    default: False
+    choices:
+      - True
+      - False
+    description:
+      - Whether to write the result to a CSV file
 """
 
 EXAMPLES = r"""
@@ -43,12 +56,12 @@ EXAMPLES = r"""
     ibmc_get_basic_info :
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}" 
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      csv_format: True
 """
 
 RETURNS = """
-    result:True
-    msg:  
+    {"result": True, "msg": "Get basic info successful!"}
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -75,7 +88,7 @@ def ibmc_get_basic_info(module):
     """
     ret = {"result": False, "msg": 'not run get basic info yet'}
     with IbmcBaseConnect(module.params, log, report) as ibmc:
-        ret = get_basic_info(ibmc)
+        ret = get_basic_info(ibmc, module.params.get("csv_format"))
     return ret
 
 
@@ -85,6 +98,7 @@ def main():
             "ibmc_ip": {"required": True, "type": 'str'},
             "ibmc_user": {"required": True, "type": 'str'},
             "ibmc_pswd": {"required": True, "type": 'str', "no_log": True},
+            "csv_format": {"required": False, "type": 'bool'}
         },
         supports_check_mode=False)
     ansible_ibmc_run_module(ibmc_get_basic_info, module, log, report)

@@ -125,6 +125,24 @@ class IbmcBaseConnect():
         else:
             self.log.info("%s -- %s" % (self.ip, msg))
 
+    def log_warn(self, msg):
+        """
+        Args:
+            msg
+        Returns:
+            None
+        Raises:
+            None
+        Examples:
+            None
+        Author: xwh
+        Date: 10/19/2019
+        """
+        if self.log is None:
+            return
+        else:
+            self.log.warn("%s -- %s" % (self.ip, msg))
+
     def report_info(self, msg):
         """
         Args:
@@ -248,7 +266,7 @@ class IbmcBaseConnect():
                        'content-type': 'application/json'
                        }
 
-        if type(data) is dict:
+        if isinstance(data, dict):
             payload = json.dumps(data)
         else:
             payload = data
@@ -324,7 +342,7 @@ class IbmcBaseConnect():
     def delete_session(self, timeout=10):
         """
         Args:
-                timeout            (str):   overtime time
+                timeout            (int):   overtime time
         Returns:
             None
         Raises:
@@ -349,6 +367,11 @@ class IbmcBaseConnect():
                    'message': 'HTTP request exception!!',
                    'headers': ''}
         elif r.status_code == 200:
+            ret = {'status_code': r.status_code,
+                   'message': r.content,
+                   'headers': r.headers}
+        elif r.status_code == 401:
+            self.log_warn("delete session failed. The error code is: 401 ")
             ret = {'status_code': r.status_code,
                    'message': r.content,
                    'headers': r.headers}
@@ -388,12 +411,45 @@ class IbmcBaseConnect():
                     "get system_uri failed, The response is: %s" % str(response))
             try:
                 ret = response.json()
-                ret = ret['Members'][0]['@odata.id']
+                ret = self.get_server_url(ret)
             except Exception as e:
                 self.log_error(
                     "Failed to get system_uri, The error info is: %s" % str(e))
                 raise
         return ret
+
+    def get_server_url(self, ret):
+        """
+        Args:
+            ret
+        Returns:
+            uri
+        Raises:
+            Exception
+        Examples:
+            None
+        Author: yx
+        Date: 10/27/2020
+        """
+        members_list = ret['Members']
+        if not members_list:
+            raise Exception("Members is null")
+        uri = None
+        try:
+            for member in members_list:
+                member_uri = member.get('@odata.id')
+                number = member_uri.split("/")[-1]
+                if "hmm" in number.lower():
+                    uri = "%s/Managers/%s" % (self.root_uri, number)
+                    response = self.request('GET', uri)
+                    ret = response.json()
+                    state = ret.get('Status').get('State')
+                    if state == "Enabled":
+                        return member_uri
+            return ret['Members'][0]['@odata.id']
+        except Exception as e:
+            self.log_error("Get managers_uri failed! The uri is : %s, The error is %s" % (str(uri), str(e)))
+            raise
 
     def get_etag(self, uri):
         """

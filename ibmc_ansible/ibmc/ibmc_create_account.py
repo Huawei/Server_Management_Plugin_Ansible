@@ -10,21 +10,29 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'status': ['preview'],
+    'supported_by': 'community'
+}
 
 DOCUMENTATION = """
+---
 module: ibmc_create_account
-short_description: create a new ibmc account
+
+short_description: create an ibmc user
+
 version_added: "2.5.0"
-description: create a new ibmc account
+
+description:
+    - "Create an ibmc user"
+
 options:
     ibmc_ip:
         required: true
         default: None
         description:
-              - iBMC IP address
+            - iBMC IP address
     ibmc_user:
         required: true
         default: None
@@ -32,48 +40,49 @@ options:
             - iBMC user name used for authentication
     ibmc_pswd:
         required: true
-        default: 
+        default:
         description:
-            - iBMC user password used for authentication 
+            - iBMC user password used for authentication
     new_account_user:
         required: true
-        default: 
+        default:
         description:
-            - iBMC Account
+            - New user name
     new_account_pswd:
         required: true
-        default: 
+        default:
         description:
-            - password  or iBMC Account
+            - New password
     roleid:
         required: true
-        default: 
+        default:
         description:
-           - "role for iBMC Account"
+            - User Role
         choice:
-           - Administrator 
-           - Operator 
-           - Commonuser  
-           - Noaccess
-           - CustomRole1 
-           - CustomRole2
-           - CustomRole3
-           - CustomRole4
+            - Administrator
+            - Operator
+            - Commonuser
+            - Noaccess
+            - CustomRole1
+            - CustomRole2
+            - CustomRole3
+            - CustomRole4
 """
+
 EXAMPLES = r"""
-    - name: create account 
-          ibmc_create_account:
-            ibmc_ip: "{{ ibmc_ip }}"
-            ibmc_user: "{{ ibmc_user }}"
-            ibmc_pswd: "{{ ibmc_pswd }}" 
-            new_account_user: "{{ account_user }}"
-            new_account_pswd: "{{ account_pswd }}"
-            roleid: "Administrator"
+ - name: create ibmc account
+    ibmc_create_account:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      new_account_user: "{{ account_user }}"
+      new_account_pswd: "{{ account_pswd }}"
+      roleid: "Administrator"
 
 """
 
 RETURNS = """
-    
+    {"result": True, "msg": "The account is created successfully!"}
 """
 
 from ansible.module_utils.basic import AnsibleModule

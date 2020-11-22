@@ -1,16 +1,21 @@
 ---
 - hosts: myhosts
   connection: local
-  name: modify ibmc Account 
+  name: modify ibmc account
   gather_facts: False
-#roleid: role id; Available values: Administrator, Operator, Commonuser, Noaccess, CustomRole1, CustomRole2, CustomRole3, CustomRole4
-#locked: it must be False
-#enable: Whether the user is enabled; Available values: True, False
-#login_interface:list of service the account can access,can be set to empty list [];  Available values in list:Web, SNMP, IPMI, SSH, SFTP, Local, Redfish 
-#login_rule: list of login rules,can be set to empty list []; Available values in list:Rule1, Rule2, Rule3 
-#account_insecure_prompt_enabled: enable or disable account insecure prompt;  Available values: True, False 
+
+# old_account_user: Old iBMC user to be modified
+# new_account_user: New user name, A string of 1 to 16 characters
+# new_account_pswd: New password, A string of up to 20 characters
+# roleid: New user role, Available values: Administrator, Operator, Commonuser, Noaccess, CustomRole1, CustomRole2, CustomRole3, CustomRole4
+# locked: New user lockout status, it must be False
+# enable: Whether the user is enabled; Available values: True, False
+# account_insecure_prompt_enabled: enable or disable account insecure prompt;  Available values: True, False
+# login_interface: User login interface, can be set to empty list; Available values in list: Web, SNMP, IPMI, SSH, SFTP, Local, Redfish
+# login_rule: Login rules associated with local users, can be set to empty list; Available values in list: Rule1, Rule2, Rule3
+
   tasks:
-  - name: modify ibmc Account
+  - name: modify ibmc account
     ibmc_modify_account :
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
@@ -21,8 +26,11 @@
       roleid: "Administrator"
       locked: False
       enable: True
+      account_insecure_prompt_enabled: True
       login_interface:
         - web
+        - SSH
+        - Redfish
       login_rule: 
-        - rule1  
-      account_insecure_prompt_enabled: True
+        - rule1
+        - rule2

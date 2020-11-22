@@ -10,17 +10,24 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {'metadata_version': '1.1',
-                    'status': ['preview'],
-                    'supported_by': 'community'}
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'status': ['preview'],
+    'supported_by': 'community'
+}
 
 DOCUMENTATION = """
+---
 module: ibmc_get_account
-short_description: get ibmc accounts info 
+
+short_description: get ibmc user info
+
 version_added: "2.5.0"
-description: get ibmc accounts info 
+
+description:
+    - "Get ibmc user info"
+
 options:
-  
   ibmc_ip:
     required: true
     default: None
@@ -33,21 +40,21 @@ options:
       - iBMC user name used for authentication
   ibmc_pswd:
     required: true
-    default: 
+    default: None
     description:
-      - iBMC user password used for authentication 
+      - iBMC user password used for authentication
 """
+
 EXAMPLES = r"""
- - name:  get ibmc Account 
+ - name:  get ibmc account
     ibmc_get_account :
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}" 
+      ibmc_pswd: "{{ ibmc_pswd }}"
 """
 
 RETURNS = """
-    result:True
-    msg:  get account successful,users list as follow: userid=2 ,userName=Administrator 
+    {"result": True, "msg": "Account obtained successfully, users list as follow: userid=2, userName=Administrator"}
 """
 
 from ansible.module_utils.basic import AnsibleModule

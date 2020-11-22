@@ -38,26 +38,18 @@ if os.path.exists(os.path.join(ibmc_lib_path, 'ibmc')):
             break
         else:
             print("you have press the wrong key")
-    ret = 1
-    ret = subprocess.call("rm -rf %s" % (os.path.join(ibmc_lib_path, 'ibmc')), shell=True)
-    if ret != 0:
-        print("rm ibmc_ansible_module failed")
-
-    ret = 1
-    ret = subprocess.call("rm -rf %s" % (os.path.join(ibmc_lib_path, 'ibmc')), shell=True)
+    ret = subprocess.call(["rm", "-rf", os.path.join(ibmc_lib_path, 'ibmc')], shell=False)
     if ret != 0:
         print("rm ibmc_ansible_module failed")
 
     ibmc_utils_path = os.path.join(ansible_installed_path, "../")
     ibmc_utils_path = os.path.join(ibmc_utils_path, "ibmc_ansible")
 
-    ret = 1
-    ret = subprocess.call("rm -rf %s" % ibmc_utils_path, shell=True)
+    ret = subprocess.call(["rm", "-rf", ibmc_utils_path], shell=False)
     if ret != 0:
         print("rm ibmc_ansible_refish api  failed")
     if flag_remove_example:
-        ret = 1
-        ret = subprocess.call("rm -rf %s" % IBMC_EXCU_PATH, shell=True)
+        ret = subprocess.call(["rm", "-rf", IBMC_EXCU_PATH], shell=False)
         if ret != 0:
             print("rm ibmc ansible yml failed")
     print("finish uninstalling ibmc_ansible modules")

@@ -4,7 +4,7 @@
 # require custom values place these variables in /etc/ansible/hosts to override
 # for each individual host
 
-#for create or modify ibmc account 
+# for create or modify ibmc account
 account_user: "account_user"
 account_pswd: "account_pswd"
 

@@ -14,9 +14,9 @@
     # Win2008_R2_x64, Win2012_x64, Win2012_R2_x64, Win2016_x64,   
 #cd_key: key of the OS Installation
 #password: Available values: Please refer to the installation guide of the OS for more infomation. Tips: use a strong password otherwise may failed to install os
-#timezone: Available values: windows Format: (GMT-12:00) International Date Line West; centos,redhat,ubuntu Format:Africa/Abidjan;
+#TimeZone: Available values: windows Format: (GMT-12:00) International Date Line West; centos,redhat,ubuntu Format:Africa/Abidjan;
     # SLES Format: Africa/Abidjan ; Please refer to the installation guide of the OS for more infomation.
-#language: Available values: windows Format: en-US; centos,redhat,ubuntu Format:en_US.UTF-8; SlES Format:en_US
+#Language: Available values: windows Format: en-US; centos,redhat,ubuntu Format:en_US.UTF-8; SlES Format:en_US
     # Please refer to the installation guide of the OS for more infomation.
 #hostname: Host Name
 #owner_name: Owner Name

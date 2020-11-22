@@ -17,9 +17,9 @@ ANSIBLE_METADATA = {'metadata_version': '1.1',
 
 DOCUMENTATION = """
 module: ibmc_ansible_show_version
-short_description: "Huawei iBMC ansible modules 2.0.4"
+short_description: "Huawei iBMC ansible modules 2.0.5"
 version_added: "2.5.0"
-description: "Huawei iBMC ansible modules 2.0.4"
+description: "Huawei iBMC ansible modules 2.0.5"
 """
 
 EXAMPLES = r"""
@@ -29,7 +29,7 @@ EXAMPLES = r"""
 """
 
 RETURNS = """
-    Huawei iBMC ansible modules 2.0.4
+    Huawei iBMC ansible modules 2.0.5
 """
 
 from ansible.module_utils.basic import AnsibleModule
@@ -39,7 +39,7 @@ def main():
     module = AnsibleModule(
         argument_spec={},
         supports_check_mode=False)
-    module.exit_json(msg="Huawei iBMC ansible modules 2.0.4")
+    module.exit_json(msg="Huawei iBMC ansible modules 2.0.5")
 
 
 if __name__ == '__main__':

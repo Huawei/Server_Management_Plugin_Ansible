@@ -4,9 +4,12 @@
   name: get bmc basic info
   gather_facts: False
 
+# cvs_format: Whether to write the result to a CSV file. It is a mandatory parameter. Available values: True, False
+
   tasks:
   - name: get bmc basic info
     ibmc_get_basic_info:
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}" 
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      csv_format: True

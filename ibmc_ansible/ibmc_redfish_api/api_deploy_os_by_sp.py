@@ -27,7 +27,7 @@ def config_os(ibmc, os_config):
      Function:
          config the os you want to deploy
      Args:
-          ibmc (str):   IbmcBaseConnect Object
+          ibmc:   IbmcBaseConnect Object
           os_config   (dict):
      Returns:
 
@@ -44,21 +44,22 @@ def config_os(ibmc, os_config):
     token = ibmc.get_token()
     # get interface id
     uri = "%s/SPService/SPOSInstallPara" % ibmc.manager_uri
-    # get etag for headers
-    etag = ibmc.get_etag(uri)
-    headers = {'content-type': 'application/json', 'X-Auth-Token': token, 'If-Match': etag}
+    headers = {'content-type': 'application/json', 'X-Auth-Token': token}
     try:
-        r = ibmc.request('POST', resource=uri, headers=headers, data=content, tmout=10)
+        r = ibmc.request('POST', resource=uri,
+                         headers=headers, data=content, tmout=10)
         result = r.status_code
         if result == 201:
             log_msg = "post os config parament successfully"
             set_result(ibmc.log_info, log_msg, True, ret)
         else:
             if result == 500 or result == 400:
-                log_msg = " post os config parament failed! error json:%s" % str(r.json())
+                log_msg = "post os config parament failed! error json:%s" % str(
+                    r.json())
                 set_result(ibmc.log_error, log_msg, False, ret)
             else:
-                log_msg = " post os config parament failed! error code:%s" % str(result)
+                log_msg = "post os config parament failed! error code:%s" % str(
+                    result)
                 set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
         ibmc.log_error("post os config parament failed! %s" % str(e))
@@ -84,21 +85,26 @@ def set_sp_finished(ibmc):
     uri = "%s/SPService" % ibmc.manager_uri
     etag = ibmc.get_etag(uri)
     token = ibmc.get_token()
-    headers = {'content-type': 'application/json', 'X-Auth-Token': token, 'If-Match': etag}
+    headers = {'content-type': 'application/json',
+               'X-Auth-Token': token, 'If-Match': etag}
     payload = {"SPFinished": True}
 
     ret = {'result': True, 'msg': ''}
     try:
-        r = ibmc.request('PATCH', resource=uri, headers=headers, data=payload, tmout=10)
+        r = ibmc.request('PATCH', resource=uri,
+                         headers=headers, data=payload, tmout=10)
         result = r.status_code
         if result == 200:
-            log_msg = "set SP result finished successful! response is : %s" % str(r.json())
+            log_msg = "set SP result finished successful! response is : %s" % str(
+                r.json())
             set_result(ibmc.log_info, log_msg, True, ret)
         else:
-            log_msg = "set SP result finished failed! error code is: %s" % str(result)
+            log_msg = "set SP result finished failed! error code is: %s" % str(
+                result)
             set_result(ibmc.log_error, log_msg, False, ret)
     except Exception as e:
-        ibmc.log_error("set SP result finished failed! exception is: %s" % str(e))
+        ibmc.log_error(
+            "set SP result finished failed! exception is: %s" % str(e))
         raise
     return ret
 
@@ -124,7 +130,8 @@ def vmm_is_connected(ibmc):
     uri = "%s/VirtualMedia/CD" % ibmc.manager_uri
     payload = {}
     try:
-        ret = ibmc.request('GET', resource=uri, headers=headers, data=payload, tmout=30)
+        ret = ibmc.request('GET', resource=uri,
+                           headers=headers, data=payload, tmout=30)
         if ret.status_code == 200:
             data = ret.json()
             result = data.get(u'Inserted')
@@ -132,7 +139,8 @@ def vmm_is_connected(ibmc):
             ibmc.log_error("get vmm info failed!")
             result = 'unknown'
     except Exception as e:
-        ibmc.log_error("check vmm connected exception! exception is:%s" % str(e))
+        ibmc.log_error(
+            "check vmm connected exception! exception is:%s" % str(e))
     return result
 
 
@@ -141,7 +149,7 @@ def un_mount_file(ibmc):
      Function:
          unmount file from virtual cd
      Args:
-          ibmc (str):   IbmcBaseConnect Object
+          ibmc:   IbmcBaseConnect Object
      Returns:
         ret {}
      Raises:
@@ -156,7 +164,8 @@ def un_mount_file(ibmc):
     uri = "%s/VirtualMedia/CD/Oem/Huawei/Actions/VirtualMedia.VmmControl" % ibmc.manager_uri
     payload = {'VmmControlType': 'Disconnect'}
     try:
-        r = ibmc.request('POST', resource=uri, headers=headers, data=payload, tmout=30)
+        r = ibmc.request('POST', resource=uri,
+                         headers=headers, data=payload, tmout=30)
         result = r.status_code
         if result == 202:
             ibmc.log_info('unmount successful')
@@ -166,12 +175,56 @@ def un_mount_file(ibmc):
         elif result == 400:
             ibmc.log.info("unmount Failure:operation failed")
         elif result == 401:
-            ibmc.log_info("unmount Failure:session id is timeout or username and password is not correct!")
+            ibmc.log_info(
+                "unmount Failure:session id is timeout or username and password is not correct!")
         else:
-            ibmc.log_info('unmount Failure:unknown error ,error code is :%s' % result)
+            ibmc.log_info(
+                'unmount Failure:unknown error ,error code is :%s' % result)
     except Exception as e:
         raise Exception("un mount file exception is :%s" % str(e))
     return result
+
+
+def checkMountTask(ibmc, taskid):
+    """
+     Function:
+          check mounting task if is finished
+     Args:
+          ibmc:  IbmcBaseConnect Object
+          taskid:  id of mounting task
+     Returns:
+        ret {}
+     Raises:
+         Exception
+     Examples:
+         None
+     Author:
+     Date: 10/12/2020
+    """
+    # 等待20 秒mount超时
+    TASK_TIME_OUT = 20
+    token = ibmc.get_token()
+    headers = {'content-type': 'application/json', 'X-Auth-Token': token}
+    uri = "https://%s%s" % (ibmc.ip, taskid)
+    payload = {}
+    for i in range(TASK_TIME_OUT):
+        try:
+            r = ibmc.request('GET', resource=uri,
+                             headers=headers, data=payload, tmout=30)
+        except Exception as e:
+            ibmc.log_info(
+                "get mount task exception; exception is: %s" % (str(e)))
+        if r.json().get("EndTime"):
+            if r.json().get("TaskStatus") == "OK":
+                return True
+            else:
+                _error_msg = str(r.json().get("Messages"))
+                ibmc.log_error(
+                    "check mounting error message is %s" % (_error_msg))
+                return False
+        time.sleep(1)
+    ibmc.log_error("check mounting task time out")
+    return False
 
 
 def mount_file(ibmc, os_img):
@@ -179,7 +232,7 @@ def mount_file(ibmc, os_img):
      Function:
          mount file to virtual cd
      Args:
-          ibmc (str):   IbmcBaseConnect Object
+          ibmc:   IbmcBaseConnect Object
      Returns:
         ret {}
      Raises:
@@ -193,24 +246,26 @@ def mount_file(ibmc, os_img):
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
     uri = "%s/VirtualMedia/CD/Oem/Huawei/Actions/VirtualMedia.VmmControl" % ibmc.manager_uri
     payload = {'VmmControlType': 'Connect', 'Image': os_img}
+    ret = False
     try:
-        r = ibmc.request('POST', resource=uri, headers=headers, data=payload, tmout=30)
+        r = ibmc.request('POST', resource=uri,
+                         headers=headers, data=payload, tmout=30)
         result = r.status_code
         if result == 202:
-            ibmc.log_info('mount %s successful ' % os_img.split("/")[-1])
-            time.sleep(10)
+            _task_uri = r.json().get("@odata.id")
+            ret = checkMountTask(ibmc, _task_uri)
         elif result == 404:
             ibmc.log_info("mount Failure:resource was not found")
         elif result == 400:
             ibmc.log_info("mount Failure:operation failed")
         elif result == 401:
-            ibmc.log_info("mount Failure:session id is timeout or username and password is not correct!")
+            ibmc.log_info(
+                "mount Failure:session id is timeout or username and password is not correct!")
         else:
             ibmc.log_info("mount Failure:unknown error")
     except Exception as e:
         ibmc.log_error("mount file exception ! exception is:%s" % str(e))
-        raise
-    return result
+    return ret
 
 
 def check_deploy_os_result(ibmc):
@@ -218,7 +273,7 @@ def check_deploy_os_result(ibmc):
     Function:
        check deploy os result
     Args:
-        ibmc (str):   IbmcBaseConnect Object
+        ibmc:   IbmcBaseConnect Object
     Returns:
       ret {}
     Raises:
@@ -232,9 +287,11 @@ def check_deploy_os_result(ibmc):
     token = ibmc.get_token()
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
     payload = {}
-    rets = {'sp_status': 'Init', 'os_progress': '', 'os_status': '', 'os_step': '', 'os_error_info': ''}
+    rets = {'sp_status': 'Init', 'os_progress': '',
+            'os_status': '', 'os_step': '', 'os_error_info': ''}
     try:
-        r = ibmc.request('GET', resource=uri, headers=headers, data=payload, tmout=100)
+        r = ibmc.request('GET', resource=uri, headers=headers,
+                         data=payload, tmout=100)
         code = r.status_code
         if code == 200:
             r = r.json()
@@ -249,8 +306,10 @@ def check_deploy_os_result(ibmc):
         else:
             ibmc.log_error("get the sp result failed! error code is %s" % code)
     except Exception as e:
-        ibmc.log_error("exception is thrown, get the sp result failed!%s" % str(e))
-        rets = {'sp_status': 'Init', 'os_progress': '', 'os_status': '', 'os_step': '', 'os_error_info': ''}
+        ibmc.log_error(
+            "exception is thrown, get the sp result failed!%s" % str(e))
+        rets = {'sp_status': 'Init', 'os_progress': '',
+                'os_status': '', 'os_step': '', 'os_error_info': ''}
 
     return rets
 
@@ -260,7 +319,7 @@ def deploy_os_by_sp_process(ibmc, os_img, os_config):
     Function:
        deploy os by sp
     Args:
-        ibmc (str):   IbmcBaseConnect Object
+        ibmc:   IbmcBaseConnect Object
         os_img (str):os image path
         os_config(dict):os config dict
     Returns:
@@ -275,7 +334,7 @@ def deploy_os_by_sp_process(ibmc, os_img, os_config):
     # Check the BMC version
     r = ibmc.check_ibmc_version(BMC_EXPECT_VERSION)
     if r is False:
-        rets={} 
+        rets = {}
         log_msg = "ibmc version must be %s or above" % BMC_EXPECT_VERSION
         set_result(ibmc.log_error, log_msg, False, rets)
         return rets
@@ -283,7 +342,7 @@ def deploy_os_by_sp_process(ibmc, os_img, os_config):
         # Check the SP version
     r = ibmc.check_sp_version(SP_EXPECT_VERSION)
     if r is False:
-        rets={} 
+        rets = {}
         log_msg = "sp version must be %s or above" % SP_EXPECT_VERSION
         set_result(ibmc.log_error, log_msg, False, rets)
         return rets
@@ -339,8 +398,8 @@ def deploy_os_by_sp_process(ibmc, os_img, os_config):
             return rets
 
     # mount OS iso image
-    rets = mount_file(ibmc, os_img)
-    if rets != 202:
+    r = mount_file(ibmc, os_img)
+    if r is False:
         un_mount_file(ibmc)
         log_msg = "install OS failed! please check the OS image is exist or not!"
         set_result(ibmc.log_error, log_msg, False, rets)
