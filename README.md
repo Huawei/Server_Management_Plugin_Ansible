@@ -34,7 +34,7 @@ V. Supported Device
     	Huawei Blade Server: CH121 V3, CH121 V5, CH121L V5, CH242 V3, CH242 V5, MM921, CX621, CX320
     	Huawei Rack Server: RH2288H V3, 2288H V5, 2488 V5
     	Huawei High-density Server: XH622 V3, XH321 V5
-        Huawei Heterogeneous server: G560 V5
+        	Huawei Heterogeneous server: G560 V5
     
     ARM Architecture:
     	TaiShan 200 server (model 2280) 
