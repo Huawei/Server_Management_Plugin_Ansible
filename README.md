@@ -1,11 +1,11 @@
 ****************************************************************************
-Ansible Plugin Pack for Huawei Device
+Ansible Plugin Package for Huawei Device
 ****************************************************************************
 
 I. General Information
 
     Name:     Ansible Plugin Pack for Huawei Server
-    Category: Configuration
+    Function: Query, Configuration, Deployment, and Upgrade
     Version:  2.0.5
 
 	
