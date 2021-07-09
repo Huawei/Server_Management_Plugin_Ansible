@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,24 +10,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_power_manager import get_power_status
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
 DOCUMENTATION = """
 module: ibmc_get_power_status
-short_description: get ibmc accounts info 
+short_description: get ibmc power info
 version_added: "2.5.0"
-description: get ibmc accounts info 
+description: get ibmc power info
 options:
-  
   ibmc_ip:
     required: true
     default: None
@@ -40,23 +32,32 @@ options:
       - iBMC user name used for authentication
   ibmc_pswd:
     required: true
-    default: 
+    default:
     description:
-      - iBMC user password used for authentication 
+      - iBMC user password used for authentication
 
 """
 EXAMPLES = r"""
- - name:  get server power status  
+ - name:  get server power status
     ibmc_get_power_status :
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}" 
+      ibmc_pswd: "{{ ibmc_pswd }}"
 """
 
 RETURNS = """
 
-
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.ibmc_redfish_api.api_power_manager import get_power_status
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
 
 
 def ibmc_get_power_status_module(module):

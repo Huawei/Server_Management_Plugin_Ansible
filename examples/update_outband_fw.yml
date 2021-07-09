@@ -4,11 +4,19 @@
   name: update outband fw
   gather_facts: False
 
+# local_file: the local firmware file needs to be upgraded, the format is directory/filename, for example: /home/cpldimage.hpm.
+# remote_file: remote firmware file. The firmware file can be /tmp on the BMC, the format is directory/filename, for example: /tmp/cpldimage.hpm;
+            # or a firmware file on a remote file server, the format is protocol://ip/folder/filename, for example: sftp://172.26.200.11/data/cpldimage.hpm.
+#    protocols: Available values: sftp,https,nfs,cifs,scp
+# file_server_user: remote file server user name
+# file_server_pswd: remote file server password
+
   tasks:
   - name:   update outband fw
     ibmc_outband_fw_update:
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}" 
-      image_url: "nfs://172.26.200.11/tmp/package/cpldimage.hpm"
-      protocol: "NFS"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      remote_file: "sftp://172.26.200.11/data/cpldimage.hpm"
+      file_server_user: "{{sftp_user}}"
+      file_server_pswd: "{{sftp_pswd}}"

@@ -1,0 +1,17 @@
+---
+- hosts: myhosts
+  connection: local
+  name: get bios
+  gather_facts: False
+
+# bios_attribute: User-specified BIOS attributes to be queried
+
+  tasks:
+  - name: get bios
+    ibmc_get_bios:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      bios_attribute:
+        - QuickBoot
+        - QuietBoot

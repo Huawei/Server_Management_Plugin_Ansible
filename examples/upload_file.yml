@@ -1,0 +1,20 @@
+---
+- hosts: myhosts
+  connection: local
+  name: file upload
+  gather_facts: False
+
+# imgfile: User-specified file to be uploaded, The format is file_path/file_name. After the upload is successful, the file is placed in the /tmp/web on iBMC.
+          # The file types allowed by the V3 board are as follows: {"hpm","cer","pem","cert","crt","pfx","p12","xml","keys","pub"}
+          # The file types allowed by the V5 board are as follows: {"hpm","zip","asc","cer","pem","cert","crt","pfx","p12","xml","keys","pub"," keytab"}
+          # The maximum allowable hpm file of V3 single-board is 46M; the maximum allowable hpm, zip, asc file of v5 single-board is 90M.
+          # The maximum allowable size of cer, pem, cert, crt, xml, p12, and keytab files is 1M.
+          # The maximum allowable size of pfx and keys files is 2M, and the maximum allowable size of pub files is 2KB.
+
+  tasks:
+  - name: file upload
+    ibmc_upload_file :
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      imgfile: "/home/plugin/SOO.keytab"

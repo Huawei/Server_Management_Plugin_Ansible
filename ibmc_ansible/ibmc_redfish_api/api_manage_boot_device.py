@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -35,19 +35,17 @@ BOOT_MODE_DICT = {
 
 def set_boot_device(ibmc, boot_device_info):
     """
-
     Function:
         Set Boot device
     Args:
-              ibmc                    (class):    Class that contains basic information about iBMC
-              boot_device_info        (dict):     User-set boot device information
+        ibmc : Class that contains basic information about iBMC
+        boot_device_info : User-set boot device information
     Returns:
-         {"result": True, "msg": "Set boot device info successful!"}
+        ret : Task result
+            "result": True or False
+            "msg": description for success or failure
     Raises:
          Set boot device info failed!
-    Examples:
-         None
-    Author:
     Date: 2019/10/23 21:44
     """
     ibmc.log_info("Start set boot device...")
@@ -100,6 +98,27 @@ def set_boot_device(ibmc, boot_device_info):
         set_result(ibmc.log_error, log_msg, False, ret)
         return ret
 
+    ret = set_boot_device_request(ibmc, boot_payload)
+    return ret
+
+
+def set_boot_device_request(ibmc, boot_payload):
+    """
+    Function:
+        Send a request to set Boot device
+    Args:
+        ibmc : Class that contains basic information about iBMC
+        boot_payload : User-set boot device information
+    Returns:
+        ret : Task result
+            "result": True or False
+            "msg": description for success or failure
+    Raises:
+         Set boot device info failed!
+    Date: 2019/10/23 21:44
+    """
+    # Initialize return information
+    ret = {'result': True, 'msg': ''}
     payload = {"Boot": boot_payload}
 
     # URL of the system resource
@@ -127,24 +146,21 @@ def set_boot_device(ibmc, boot_device_info):
         ibmc.log_error("Set boot device info failed! The error info is: %s \n" % str(e))
         raise requests.exceptions.RequestException(
             "Set boot device info failed! The error info is: %s" % str(e))
-
     return ret
 
 
 def get_boot_device(ibmc):
     """
-
     Function:
         Get boot device
     Args:
-              ibmc              (class):   Class that contains basic information about iBMC
+        ibmc : Class that contains basic information about iBMC
     Returns:
-         {"result": True, "msg": "Get boot device info successful!"}
+        ret : Task result
+            "result": True or False
+            "msg": description for success or failure
     Raises:
         None
-    Examples:
-         None
-    Author:
     Date: 2019/10/23 21:08
     """
     ibmc.log_info("Start get boot device...")

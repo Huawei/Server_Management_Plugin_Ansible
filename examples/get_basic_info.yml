@@ -12,4 +12,4 @@
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
       ibmc_pswd: "{{ ibmc_pswd }}"
-      csv_format: True
+      csv_format: False

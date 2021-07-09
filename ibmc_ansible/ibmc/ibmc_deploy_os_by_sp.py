@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,20 +10,13 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_sp import deploy_os_by_sp_process
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
 DOCUMENTATION = """
 module: ibmc_deploy_os_by_sp
-short_description:  deploy os by sp 
+short_description:  deploy os by sp
 version_added: "2.5.0"
 description: deploy os by sp
 options:
@@ -40,18 +33,18 @@ options:
       - iBMC user name used for authentication
   ibmc_pswd:
     required: true
-    default: 
+    default:
     description:
-      - iBMC user password used for authentication 
+      - iBMC user password used for authentication
   os_img:
     required: true
-    default: 
-    description: 
-      - os img file you want to deploy 
+    default:
+    description:
+      - os img file you want to deploy
   os_config:
     required: true
-    default: 
-    description: 
+    default:
+    description:
       - "os config json the json keys as follows:
                 {
             InstallMode: InstallMode_value,
@@ -85,8 +78,8 @@ options:
             }
             ]
         }"
-       
 """
+
 EXAMPLES = r"""
   - name:  ibmc deploy centos7u3 by sp
     ibmc_deploy_os_by_sp:
@@ -111,7 +104,7 @@ EXAMPLES = r"""
         NetCfg:
           - Device:
               Name: "eth10086"
-              MAC: "04:B0:E7:48:27:84"
+              MAC: ""**:**:**:**:**:**""
           - IPv4Addresses:
               - Address: "192.168.2.44"
                 SubnetMask: "255.255.0.0"
@@ -130,6 +123,16 @@ EXAMPLES = r"""
 RETURNS = """
 
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_sp import deploy_os_by_sp_process
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
 
 
 def ibmc_deploy_os_by_sp_process(module):

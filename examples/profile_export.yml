@@ -1,0 +1,21 @@
+---
+- hosts: myhosts
+  connection: local
+  name: export profile
+  gather_facts: False
+
+# file_name:  the file name you want to export ;if the file name is empty ,ibmc_ansible_profile will used the default name; such as 172.26.201.2_profile.xml
+# local_export: local file path of the Ansible environment to save the profile
+# remote_export: Remote path for saving exported files. The file path can be /tmp on the BMC, or a folder on a remote file server, the format is protocol://ip/folder
+#    protocols: Available values: sftp,https,nfs,cifs,scp
+# file_server_user: remote file server user name
+# file_server_pswd: remote file server password
+
+  tasks:
+  - name: export profile
+    ibmc_profile_export:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      file_name: "172.26.0.1_20210318045050_profile.xml"
+      local_export: "/home/plugin"

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.ibmc_redfish_api.api_manage_snmp import set_snmp_trap
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -53,18 +46,13 @@ options:
   service_enabled:
     required: false
     default: None
-    choices:
-      - True
-      - False
+    choices: [True, False ]
     description:
       - Whether trap is enabled
   trap_version:
     required: false
     default: None
-    choices:
-      - V1
-      - V2C
-      - V3
+    choices: [V1, V2C, V3]
     description:
       - Trap version
   trap_v3_user:
@@ -75,42 +63,32 @@ options:
   trap_mode:
     required: false
     default: None
-    choices:
-      - OID
-      - EventCode
-      - PreciseAlarm
+    choices: [OID, EventCode, PreciseAlarm]
     description:
       - Trap mode
   trap_server_identity:
     required: false
     default: None
-    choices:
-      - BoardSN
-      - ProductAssetTag
-      - HostName
+    choices: [BoardSN, ProductAssetTag, HostName]
     description:
       - Host identifier
   alarm_severity:
     required: false
     default: None
-    choices:
-      - Critical
-      - Major
-      - Minor
-      - Normal
+    choices: [Critical, Major, Minor, Normal]
     description:
       - Severity levels of the alarm to be sent
   trap_servers:
     required: false
     default: None
     description:
-      - Can set one or more trap server, When all parameters of the trap server are empty, it indicates that the trap server is not configured
+      - Can set one or more trap server,
+        When all parameters of the trap server are empty,
+        it indicates that the trap server is not configured
   trap_servers/trap_enabled:
     required: false
     default: None
-    choices:
-      - True
-      - False
+    choices: [True, False ]
     description:
       - Whether the trap server is enabled
   trap_servers/trap_server_address:
@@ -155,6 +133,16 @@ EXAMPLES = """
 RETURNS = """
     {"result": True, "msg": "Set SNMP trap resource properties successful!"}
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.ibmc_redfish_api.api_manage_snmp import set_snmp_trap
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
 
 
 def ibmc_set_snmp_trap_module(module):

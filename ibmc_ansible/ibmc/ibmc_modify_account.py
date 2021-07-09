@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_manage_account import modify_account
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -70,48 +63,38 @@ options:
     default:
     description:
       - New user role
-    choice:
-      - Administrator
-      - Operator
-      - Commonuser
-      - Noaccess
-      - CustomRole1
-      - CustomRole2
-      - CustomRole3
-      - CustomRole4
+    choice: [Administrator, Operator, Commonuser, Noaccess, CustomRole1,
+        CustomRole2, CustomRole3, CustomRole4]
   locked:
     required: false
     default:
     description:
       - New user lockout status
-    choice:
-      - "False"
+    choice: ["False"]
   enable:
     required: false
     default:
     description:
       - Whether the user is enabled
-    choice:
-      - "False"
-      - "True"
+    choice: ["False", "True"]
   account_insecure_prompt_enabled :
     required: false
     default:
     description:
       - enable or disable the insecure prompt
-    choice:
-      - "False"
-      - "True"
+    choice: ["False", "True"]
   login_interface:
     required: false
     default:
+    choice: [Web, SNMP, IPMI, SSH, SFTP, Local, Redfish]
     description:
-      - User login interface, can be set to empty list; Available values: Web, SNMP, IPMI, SSH, SFTP, Local, Redfish
+      - User login interface, can be set to empty list
   login_rule:
     required: false
     default:
+    choice: [Rule1, Rule2, Rule3]
     description:
-      - Login rules associated with local users, can be set to empty list; Available values: Rule1, Rule2, Rule3
+      - Login rules associated with local users, can be set to empty list
 """
 
 EXAMPLES = r"""
@@ -140,6 +123,15 @@ RETURNS = """
     {"result": True, "msg": "Account modified successfully!"}
 """
 
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.ibmc_redfish_api.api_manage_account import modify_account
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import set_result
+
 
 def ibmc_modify_account_module(module):
     """
@@ -157,6 +149,51 @@ def ibmc_modify_account_module(module):
     Author: xwh
     Date: 2019/10/9 20:30
     """
+    ret = {"result": False, "msg": 'not run modify account yet'}
+    with IbmcBaseConnect(module.params, log, report) as ibmc:
+        oem_info = ibmc.oem_info
+        config_dic = {}
+        body_para = {}
+        oem_dic = {oem_info: {}}
+        if module.params.get("new_account_user"):
+            body_para["UserName"] = module.params.get("new_account_user")
+        if module.params.get("new_account_pswd"):
+            body_para["Password"] = module.params.get("new_account_pswd")
+        if module.params.get("roleid"):
+            body_para["RoleId"] = module.params.get("roleid")
+        if module.params.get("locked") is not None:
+            if module.params["locked"] is not False:
+                error_msg = "The locked param can not be set to true"
+                set_result(ibmc.log_error, error_msg, False, ret)
+                return ret
+            body_para["Locked"] = module.params["locked"]
+        if module.params.get("enable") is not None:
+            body_para["Enabled"] = module.params["enable"]
+        if module.params.get("account_insecure_prompt_enabled") is not None:
+            oem_dic[oem_info]["AccountInsecurePromptEnabled"] = module.params["account_insecure_prompt_enabled"]
+
+        try:
+            new_information(ibmc, module, oem_dic)
+        except Exception as e:
+            set_result(ibmc.log_error, str(e), False, ret)
+            return ret
+        if oem_dic[oem_info] != {}:
+            body_para['Oem'] = oem_dic
+        config_dic[module.params["old_account_user"]] = body_para
+        ret = modify_account(ibmc, config_dic)
+    return ret
+
+
+def new_information(ibmc, module, oem_dic):
+    """
+    Function: Obtain the new account information configured by the user.
+    Args:
+        ibmc: Class that contains basic information about iBMC
+        module: information from yml
+        oem_dic: parsed account modification information
+    Returns:
+        None
+    """
     login_interface_dic = {
         "web": "Web",
         "snmp": "SNMP",
@@ -172,57 +209,35 @@ def ibmc_modify_account_module(module):
         "rule2": "Rule2",
         "rule3": "Rule3"
     }
+    oem_info = ibmc.oem_info
 
-    ret = {"result": False, "msg": 'not run modify account yet'}
-    with IbmcBaseConnect(module.params, log, report) as ibmc:
-        config_dic = {}
-        body_para = {}
-        oem_dic = {
-            "Huawei": {}
-        }
-        if module.params.get("new_account_user"):
-            body_para["UserName"] = module.params.get("new_account_user")
-        if module.params.get("new_account_pswd"):
-            body_para["Password"] = module.params.get("new_account_pswd")
-        if module.params.get("roleid"):
-            body_para["RoleId"] = module.params.get("roleid")
-        if module.params.get("locked") is not None:
-            if module.params["locked"] is not False:
-                raise Exception("The locked param can not be set to true")
-            body_para["Locked"] = module.params["locked"]
-        if module.params.get("enable") is not None:
-            body_para["Enabled"] = module.params["enable"]
-        if module.params.get("account_insecure_prompt_enabled") is not None:
-            oem_dic["Huawei"]["AccountInsecurePromptEnabled"] = module.params["account_insecure_prompt_enabled"]
-
-        login_interface = module.params.get("login_interface")
-        if login_interface is not None:
-            oem_dic["Huawei"]["LoginInterface"] = []
-            if login_interface != []:
-                for each_item in login_interface:
-                    if each_item is None:
-                        raise Exception("The user login interface list member could not be None")
-                    if each_item.lower() not in login_interface_dic.keys():
-                        raise Exception("The user login interface param: %s is invalid, it should be in the list: %s"
-                                        % (each_item, str(login_interface_dic.values())))
-                    oem_dic["Huawei"]["LoginInterface"].append(login_interface_dic.get(each_item.lower()))
-
-        login_role = module.params.get("login_rule")
-        if login_role is not None:
-            oem_dic["Huawei"]["LoginRule"] = []
-            if login_role != []:
-                for each_item in login_role:
-                    if each_item is None:
-                        raise Exception("The user login role list member could not be None")
-                    if each_item.lower() not in login_rule_dic.keys():
-                        raise Exception("The user login role param: %s is invalid, it should be in the list: %s"
-                                        % (each_item, str(login_rule_dic.values())))
-                    oem_dic["Huawei"]["LoginRule"].append(login_rule_dic.get(each_item.lower()))
-        if oem_dic["Huawei"] != {}:
-            body_para['Oem'] = oem_dic
-        config_dic[module.params["old_account_user"]] = body_para
-        ret = modify_account(ibmc, config_dic)
-    return ret
+    login_interface = module.params.get("login_interface")
+    if login_interface is not None:
+        oem_dic[oem_info]["LoginInterface"] = []
+        if login_interface:
+            for each_item in login_interface:
+                if each_item is None:
+                    error_msg = "The user login interface list member could not be None"
+                    raise Exception(error_msg)
+                if each_item.lower() not in login_interface_dic.keys():
+                    error_msg = "The user login interface param: %s is invalid, it should be in the " \
+                                "list: %s" % (each_item, str(login_interface_dic.values()))
+                    raise Exception(error_msg)
+                oem_dic[oem_info]["LoginInterface"].append(login_interface_dic.get(each_item.lower()))
+    login_role = module.params.get("login_rule")
+    if login_role is not None:
+        oem_dic[oem_info]["LoginRule"] = []
+        if login_role:
+            for each_item in login_role:
+                if each_item is None:
+                    error_msg = "The user login role list member could not be None"
+                    raise Exception(error_msg)
+                if each_item.lower() not in login_rule_dic.keys():
+                    error_msg = "The user login role param: %s is invalid, it should be " \
+                                "in the list: %s" % (each_item, str(login_rule_dic.values()))
+                    raise Exception(error_msg)
+                oem_dic[oem_info]["LoginRule"].append(
+                    login_rule_dic.get(each_item.lower()))
 
 
 def main():

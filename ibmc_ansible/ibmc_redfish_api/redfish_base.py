@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -15,36 +15,25 @@ import ssl
 import re
 import requests
 from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
+from requests.packages.urllib3.poolmanager import PoolManager as PoolManager
+from requests.packages.urllib3.connection import HTTPSConnection as HTTPSConnection
 
 try:
     from ssl import PROTOCOL_TLSv1_2
-
     IMPORT_TLS = True
 except ImportError as e:
     IMPORT_TLS = False
+    print(str(e))
 
-from ibmc_ansible.utils import read_ssl_verify, read_ssl_force_tls
+try:
+    from ssl import PROTOCOL_SSLv23 as PROTOCOL_TLS
+except ImportError as e:
+    from ssl import PROTOCOL_TLS as PROTOCOL_TLS
+    print(str(e))
 
-if IMPORT_TLS:
-    class tls1_2adapter(HTTPAdapter):
-        """
-          Fuction : force to user tls1.2
-          Args:
-              None
-          Returns:
-              None
-          Raises:
-              None
-          Examples:
-              None
-          Author: xwh
-          Date: 10/19/2019
-          """
-
-        def init_poolmanager(self, *pool_args, **pool_kwargs):
-            self.poolmanager = PoolManager(
-                *pool_args, ssl_version=ssl.PROTOCOL_TLSv1_2, **pool_kwargs)
+from ibmc_ansible.utils import read_ssl_ciphers
+from ibmc_ansible.utils import read_ssl_verify
+from ibmc_ansible.utils import read_ssl_force_tls
 
 
 class IbmcBaseConnect():
@@ -55,14 +44,12 @@ class IbmcBaseConnect():
         None
     Raises:
         None
-    Examples:
-        None
-    Author: xwh
     Date: 10/19/2019
     """
 
     def __init__(self, param_dic, log=None, report=None, debug=None):
         self.bmc_token = ''
+        self.oem_info = ''
         self.bmc_session_id = ''
         self.user = param_dic['ibmc_user']
         self.pswd = param_dic['ibmc_pswd']
@@ -72,13 +59,57 @@ class IbmcBaseConnect():
         self.tls1_2 = read_ssl_force_tls(log)
         self.report = report
         self.session = requests.session()
-        if IMPORT_TLS and self.tls1_2:
-            self.adapter = tls1_2adapter()
-            self.session.mount("https://", self.adapter)
+        self.ciphers = read_ssl_ciphers(log)
+        if (self.ciphers is not None) and (self.ciphers != ''):
+            ssl._DEFAULT_CIPHERS = self.ciphers
         else:
-            # import failed and force use tls1_2
+            ssl._DEFAULT_CIPHERS = ("ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:"
+                                    "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:"
+                                    "DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:"
+                                    "DHE-DSS-AES128-GCM-SHA256:DHE-DSS-AES256-GCM-SHA384:"
+                                    "ECDHE-RSA-CHACHA20-POLY1305")
+
+        class Com_Adapter(HTTPAdapter):
+
+            def init_poolmanager(self, *pool_args, **pool_kwargs):
+                if "ssl_context" in dir(HTTPSConnection(host="")):
+                    context = ssl.SSLContext(PROTOCOL_TLS)
+                    context.set_ciphers(ssl._DEFAULT_CIPHERS)
+                    self.poolmanager = PoolManager(
+                        *pool_args, ssl_context=context, **pool_kwargs)
+                else:
+                    self.poolmanager = PoolManager(
+                        *pool_args, **pool_kwargs)
+
+        self.adapter = Com_Adapter()
+        if IMPORT_TLS:
+            class Tls1_2Adapter(HTTPAdapter):
+                """
+                Fuction : force to user tls1.2
+                Args:
+                    None
+                Returns:
+                    None
+                Raises:
+                    None
+                Date: 10/19/2019
+                """
+
+                def init_poolmanager(self, *pool_args, **pool_kwargs):
+                    if "ssl_context" in dir(HTTPSConnection(host="")):
+                        context = ssl.SSLContext(PROTOCOL_TLSv1_2)
+                        context.set_ciphers(ssl._DEFAULT_CIPHERS)
+                        self.poolmanager = PoolManager(
+                            *pool_args, ssl_version=PROTOCOL_TLSv1_2, ssl_context=context, **pool_kwargs)
+                    else:
+                        self.poolmanager = PoolManager(
+                            *pool_args, ssl_version=PROTOCOL_TLSv1_2, **pool_kwargs)
+            if self.tls1_2:
+                self.adapter = Tls1_2Adapter()
+        else:
             if self.tls1_2:
                 raise Exception("import ssl.PROTOCOL_TLSv1_2 exception")
+        self.session.mount("https://", self.adapter)
         self.debug = debug
         self.create_session()
         self.root_uri = ''.join(["https://%s" % self.ip, "/redfish/v1"])
@@ -97,9 +128,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         if self.debug is None:
@@ -115,9 +143,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         if self.log is None:
@@ -133,9 +158,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         if self.log is None:
@@ -151,9 +173,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         if self.report is None:
@@ -169,9 +188,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         if self.log is None:
@@ -187,9 +203,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         if self.report is None:
@@ -205,9 +218,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         return self
@@ -220,9 +230,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         self._close()
@@ -235,15 +242,12 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         self.delete_session()
         self.session.close()
 
-    def request(self, method, resource, headers=None, data=None, tmout=10):
+    def request(self, method, resource, headers=None, data=None, files=None, tmout=10):
         """
         Args:
                 method            (str):
@@ -256,9 +260,6 @@ class IbmcBaseConnect():
             response
         Raises:
             Exception
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         if headers is None:
@@ -274,7 +275,7 @@ class IbmcBaseConnect():
         try:
             if method == 'POST':
                 r = self.session.post(
-                    url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
+                    url, data=payload, headers=headers, files=files, verify=self.verify, timeout=tmout)
             elif method == 'GET':
                 r = self.session.get(
                     url, data=payload, headers=headers, verify=self.verify, timeout=tmout)
@@ -299,9 +300,6 @@ class IbmcBaseConnect():
             bool
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         url = 'https://%s/redfish/v1/SessionService/Sessions' % self.ip
@@ -329,11 +327,15 @@ class IbmcBaseConnect():
                 token = r.headers['X-Auth-Token']
                 self._set_token(token)
                 self._set_bmc_session_id(session_id)
+                oem = r.json().get("Oem")
+                (self.oem_info, oem_detail), = oem.items()
+
             else:
-                self.log_error(
-                    "Failed to create session, The error code is: %s" % r.status_code)
-                raise Exception(
-                    "Failed to create session, The error code is: %s" % r.status_code)
+                error_msg = r.json()
+                log_error = "Failed to create session, The error code is: %s. " \
+                            "The error info is %s" % (r.status_code, str(error_msg))
+                self.log_error(log_error)
+                raise Exception(log_error)
         except Exception as e:
             self.log_error(
                 "Create session exception, The error info is: %s" % str(e))
@@ -347,9 +349,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         session_id = self._get_bmc_session_id()
@@ -388,9 +387,6 @@ class IbmcBaseConnect():
             uri
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         uri = "%s/Managers" % self.root_uri
@@ -426,9 +422,6 @@ class IbmcBaseConnect():
             uri
         Raises:
             Exception
-        Examples:
-            None
-        Author: yx
         Date: 10/27/2020
         """
         members_list = ret['Members']
@@ -448,7 +441,8 @@ class IbmcBaseConnect():
                         return member_uri
             return ret['Members'][0]['@odata.id']
         except Exception as e:
-            self.log_error("Get managers_uri failed! The uri is : %s, The error is %s" % (str(uri), str(e)))
+            self.log_error("Get managers_uri failed! The uri is : %s, The error is %s" % (
+                str(uri), str(e)))
             raise
 
     def get_etag(self, uri):
@@ -459,9 +453,6 @@ class IbmcBaseConnect():
             etag
         Raises:
             Exception
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         etag = ''
@@ -503,9 +494,6 @@ class IbmcBaseConnect():
             task info response json
         Raises:
             Exception
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         token = self.get_token()
@@ -529,9 +517,6 @@ class IbmcBaseConnect():
             self.bmc_token
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         return self.bmc_token
@@ -544,9 +529,6 @@ class IbmcBaseConnect():
             self.bmc_session_id
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         return self.bmc_session_id
@@ -559,9 +541,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         self.bmc_token = token
@@ -574,9 +553,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author: xwh
         Date: 10/19/2019
         """
         self.bmc_session_id = session_id
@@ -591,9 +567,6 @@ class IbmcBaseConnect():
             json
         Raises:
             None
-        Examples:
-            None
-        Author:
         Date: 10/30/2019
         """
         token = self.get_token()
@@ -624,9 +597,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author:
         Date: 10/30/2019
         """
         # get chassis resource
@@ -659,9 +629,6 @@ class IbmcBaseConnect():
             None
         Raises:
             None
-        Examples:
-            None
-        Author:
         Date: 10/30/2019
         """
 
@@ -695,9 +662,6 @@ class IbmcBaseConnect():
            version
         Raises:
            Exception
-        Examples:
-           None
-        Author:
         Date: 10/30/2019
         """
         try:
@@ -717,9 +681,6 @@ class IbmcBaseConnect():
            version
         Raises:
            Exception
-        Examples:
-           sp_version
-        Author:
         Date: 10/30/2019
         """
         token = self.get_token()
@@ -749,9 +710,6 @@ class IbmcBaseConnect():
            bool
         Raises:
            Exception
-        Examples:
-           None
-        Author:
         Date: 10/30/2019
         """
         OLD_VESION_STYLE = r'^\d+.\d*\d$'
@@ -785,9 +743,6 @@ class IbmcBaseConnect():
            bool
         Raises:
            Exception
-        Examples:
-           None
-        Author:
         Date: 10/30/2019
         """
         sp_version = self.get_sp_version()

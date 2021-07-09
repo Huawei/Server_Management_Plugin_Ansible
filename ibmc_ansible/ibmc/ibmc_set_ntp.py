@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.ibmc_redfish_api.api_manage_ntp import set_ntp
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -26,14 +19,10 @@ ANSIBLE_METADATA = {
 DOCUMENTATION = """
 ---
 module: ibmc_set_ntp
-
 short_description: Set ntp info
-
 version_added: "2.5.0"
-
 description:
     - "Modifying NTP resource properties"
-
 options:
   ibmc_ip:
     required: true
@@ -53,36 +42,31 @@ options:
   service_enabled:
     required: false
     default: None
-    choices:
-      - True
-      - False
+    choices: [True, False]
     description:
       - Enable or disable bmc ntp service
   pre_ntp_server:
     required: false
     default: None
     description:
-      - Config preferred NtpServer, you can enter ipv4 ipv6 or domain name, NTP Server will be blanked when set to an empty string
+      - Config preferred NtpServer, you can enter ipv4 ipv6 or domain name,
+        NTP Server will be blanked when set to an empty string
   alt_ntp_server:
     required: false
     default: None
     description:
-      - Config alternate NtpServer, you can enter ipv4 ipv6 or domain name, NTP Server will be blanked when set to an empty string
+      - Config alternate NtpServer, you can enter ipv4 ipv6 or domain name,
+        NTP Server will be blanked when set to an empty string
   server_auth_enabled:
     required: false
     default: None
-    choices:
-      - True
-      - False
+    choices: [True, False]
     description:
       - Enable or disable Server Authentication service
   ntp_address_origin:
     required: false
     default: None
-    choices:
-      - IPv4
-      - IPv6
-      - Static
+    choices: [IPv4, IPv6, Static]
     description:
       - Config Ntp Address Origin
   min_polling_interval:
@@ -115,6 +99,15 @@ EXAMPLES = """
 RETURNS = """
     {"result": True, "msg": "Set NTP configuration resource info successful!"}
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.ibmc_redfish_api.api_manage_ntp import set_ntp
+from ibmc_ansible.ibmc_logger import log, report
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
 
 
 def ibmc_set_ntp_module(module):

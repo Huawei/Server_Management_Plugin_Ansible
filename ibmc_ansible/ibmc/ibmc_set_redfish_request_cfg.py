@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,54 +10,62 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
-DOCUMENTATION = """
+DOCUMENTATION = r'''
 ---
 module: ibmc_set_redfish_request_cfg
-short_description: set request config 
+short_description: set request config
 version_added: "2.5.0"
-description: set request config
+description:
+    - Set request config
 options:
-  verify:
-    required: true
-    default: None
-    description: the requests module verify server certify or not 
-    choice:
-       - "True"
-       - "False"
-  cetify:
-    required: false
-    default: 
-    description: file path of the certify 
-  force_tls1_2:
-    required: false
-    default: 
-    description: force to use tls1.2
-    choice:
-       - "True"
-       - "False"  
-"""
-EXAMPLES = """
-    - name:  set request config
-      ibmc_set_redfish_request_cfg:
-        verify: True
-        certify:
-        force_tls1_2: True 
-"""
+    verify:
+        required: true
+        default: None
+        description:
+            - the requests module verify server certify or not
+        choices: [ True, False ]
+    cetify:
+        required: false
+        default:
+        description:
+            - file path of the certify
+    force_tls1_2:
+        required: false
+        default:
+        description:
+            - force to use tls1.2
+        choices: [ True, False ]
+    ciphers:
+        required: false
+        default:
+        description:
+            - Security cipher suite
+'''
 
-RETURNS = """
-   set verify sucessed
-"""
+EXAMPLES = r'''
+- name: set request config
+  ibmc_set_redfish_request_cfg:
+    verify: True
+    certify:
+    force_tls1_2: True
+    ciphers:
+'''
+
+RETURNS = r'''
+    "msg": "set verify sucessed"
+'''
 
 from ansible.module_utils.basic import AnsibleModule
 
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.utils import ansible_ibmc_run_module, set_result, set_ssl_cfg
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.utils import set_ssl_cfg
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import set_result
 
 
 def ibmc_set_request(module):
@@ -86,13 +94,13 @@ def ibmc_set_request(module):
             verify = module.params.get("certify")
         else:
             verify = True
-
+    ciphers = module.params.get("ciphers")
     if module.params.get("force_tls1_2") is False:
         force_tls1_2 = False
     else:
         force_tls1_2 = True
 
-    r = set_ssl_cfg(verify, force_tls1_2, log)
+    r = set_ssl_cfg(verify, force_tls1_2, ciphers, log)
     if r:
         log_msg = "set verify sucessed"
         set_result(log.info, log_msg, True, ret)
@@ -108,6 +116,7 @@ def main():
             "verify": {"required": True, "type": 'bool'},
             "certify": {"required": False, "type": 'str'},
             "force_tls1_2": {"required": False, "type": 'bool'},
+            "ciphers": {"required": False, "type": 'str'},
 
         },
         supports_check_mode=False)

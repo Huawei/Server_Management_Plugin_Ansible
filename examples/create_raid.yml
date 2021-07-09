@@ -8,7 +8,7 @@
 # capacity_mbyte: Volume capacity, must be an integer, the size unit is MB. It is an optional parameter
 # stripe_size: Stripe size of a volume, must be an integer. It is an optional parameter. Available values: 65536, 131072, 262144, 524288, 1048576
 # cachecade_flag: Whether it is a CacheCade volume. It is an optional parameter, Available values: True, False
-# drives: Member disk list. It is a mandatory parameter. Format: "disk1,disk2,.,diskN"
+# drives: Member disk list number. It is a mandatory parameter. Format: "1,2,.,N"
 # volume_raid_level: RAID level of the volume. It is a mandatory parameter. Available values: RAID0, RAID1, RAID5, RAID6, RAID10, RAID50, RAID60
 # volume_name: Volume name. It is an optional parameter. A string of up to 15 bytes. Value range: ASCII code corresponding to 0x20 to 0x7E
 # df_read_policy: Default read policy of the volume. It is an optional parameter. Available values: NoReadAhead, ReadAhead

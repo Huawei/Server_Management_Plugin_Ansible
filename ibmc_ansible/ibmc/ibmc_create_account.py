@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,23 +10,17 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
-DOCUMENTATION = """
+DOCUMENTATION = r'''
 ---
 module: ibmc_create_account
-
-short_description: create an ibmc user
-
+short_description: Create an ibmc user
 version_added: "2.5.0"
-
 description:
-    - "Create an ibmc user"
-
+    - Create an ibmc user
 options:
     ibmc_ip:
         required: true
@@ -40,54 +34,47 @@ options:
             - iBMC user name used for authentication
     ibmc_pswd:
         required: true
-        default:
+        default: None
         description:
             - iBMC user password used for authentication
     new_account_user:
         required: true
-        default:
+        default: None
         description:
             - New user name
     new_account_pswd:
         required: true
-        default:
+        default: None
         description:
             - New password
     roleid:
         required: true
-        default:
+        default: None
         description:
             - User Role
-        choice:
-            - Administrator
-            - Operator
-            - Commonuser
-            - Noaccess
-            - CustomRole1
-            - CustomRole2
-            - CustomRole3
-            - CustomRole4
-"""
+        choices: [ Administrator, Operator, Commonuser, Noaccess, CustomRole1, CustomRole2, CustomRole3, CustomRole4 ]
+'''
 
-EXAMPLES = r"""
- - name: create ibmc account
-    ibmc_create_account:
-      ibmc_ip: "{{ ibmc_ip }}"
-      ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}"
-      new_account_user: "{{ account_user }}"
-      new_account_pswd: "{{ account_pswd }}"
-      roleid: "Administrator"
+EXAMPLES = r'''
+- name: create ibmc account
+  ibmc_create_account:
+    ibmc_ip: "{{ ibmc_ip }}"
+    ibmc_user: "{{ ibmc_user }}"
+    ibmc_pswd: "{{ ibmc_pswd }}"
+    new_account_user: "{{ account_user }}"
+    new_account_pswd: "{{ account_pswd }}"
+    roleid: "Administrator"
 
-"""
+'''
 
-RETURNS = """
-    {"result": True, "msg": "The account is created successfully!"}
-"""
+RETURNS = r'''
+    "msg": "The account is created successfully!"
+'''
 
 from ansible.module_utils.basic import AnsibleModule
 
-from ibmc_ansible.ibmc_logger import log, report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.ibmc_logger import report
 from ibmc_ansible.ibmc_redfish_api.api_manage_account import create_account
 from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
 from ibmc_ansible.utils import ansible_ibmc_run_module
@@ -101,7 +88,8 @@ def ibmc_create_account_module(module):
               ansible_module       (class):
 
     Returns:
-        ret = {"result": False, "msg": 'not run create account yet'}
+        "result": False
+        "msg": 'not run create account yet'
     Raises:
         Exception
     Examples:

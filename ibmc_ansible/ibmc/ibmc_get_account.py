@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,52 +10,46 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
-DOCUMENTATION = """
+DOCUMENTATION = r'''
 ---
 module: ibmc_get_account
-
-short_description: get ibmc user info
-
+short_description: Get ibmc user info
 version_added: "2.5.0"
-
 description:
-    - "Get ibmc user info"
-
+    - Get ibmc user info
 options:
-  ibmc_ip:
-    required: true
-    default: None
-    description:
-      - iBMC IP address
-  ibmc_user:
-    required: true
-    default: None
-    description:
-      - iBMC user name used for authentication
-  ibmc_pswd:
-    required: true
-    default: None
-    description:
-      - iBMC user password used for authentication
-"""
+    ibmc_ip:
+        required: true
+        default: None
+        description:
+            - iBMC IP address
+    ibmc_user:
+        required: true
+        default: None
+        description:
+            - iBMC user name used for authentication
+    ibmc_pswd:
+        required: true
+        default: None
+        description:
+            - iBMC user password used for authentication
+'''
 
-EXAMPLES = r"""
- - name:  get ibmc account
-    ibmc_get_account :
-      ibmc_ip: "{{ ibmc_ip }}"
-      ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}"
-"""
+EXAMPLES = r'''
+- name: get ibmc account
+  ibmc_get_account:
+    ibmc_ip: "{{ ibmc_ip }}"
+    ibmc_user: "{{ ibmc_user }}"
+    ibmc_pswd: "{{ ibmc_pswd }}"
+'''
 
-RETURNS = """
-    {"result": True, "msg": "Account obtained successfully, users list as follow: userid=2, userName=Administrator"}
-"""
+RETURNS = r'''
+    "msg": "Account obtained successfully."
+'''
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -70,7 +64,7 @@ def ibmc_get_account_module(module):
     Function:
 
     Args:
-              ansible_module       (class):
+              module       (class):
 
     Returns:
         ret = {"result": False, "msg": 'not run get account yet'}

@@ -1,0 +1,15 @@
+---
+- hosts: myhosts
+  connection: local
+  name: reset ibmc bios
+  gather_facts: False
+
+# Immediately: Whether to restart the system immediately for the configuration to take effect: True, False
+
+  tasks:
+  - name: reset ibmc bios
+    ibmc_reset_bios :
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      Immediately: False

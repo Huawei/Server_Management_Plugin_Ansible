@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -13,10 +13,13 @@
 import base64
 import re
 import time
-
-from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_sp import vmm_is_connected, un_mount_file, mount_file
-from ibmc_ansible.ibmc_redfish_api.api_manage_boot_device import get_boot_device, set_boot_device
-from ibmc_ansible.ibmc_redfish_api.api_power_manager import manage_power, get_power_status
+from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_sp import vmm_is_connected
+from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_sp import un_mount_file
+from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_sp import mount_file
+from ibmc_ansible.ibmc_redfish_api.api_manage_boot_device import get_boot_device
+from ibmc_ansible.ibmc_redfish_api.api_manage_boot_device import set_boot_device
+from ibmc_ansible.ibmc_redfish_api.api_power_manager import manage_power
+from ibmc_ansible.ibmc_redfish_api.api_power_manager import get_power_status
 from ibmc_ansible.utils import set_result
 
 SERVER_CD_ERROR_CODE = {"101": "read system info failed",
@@ -49,7 +52,8 @@ def read_bmc_info_by_redfish(ibmc):
                ibmc       (class):
 
      Returns:
-         ret = {"result": False, "msg": 'not run server profile yet'}
+         "result": False
+         "msg": 'not run server profile yet'
      Raises:
          None
      Examples:
@@ -57,6 +61,7 @@ def read_bmc_info_by_redfish(ibmc):
      Author: xwh
      Date: 2019/10/9 20:30
     """
+    oem_info = ibmc.oem_info
     rets = ''
     try:
         ret = ibmc.get_manager_resource()
@@ -64,7 +69,7 @@ def read_bmc_info_by_redfish(ibmc):
         ibmc.log_error(" read bmc info failed! exception is:%s" % str(e))
         raise
     try:
-        info = ret['Oem']['Huawei']['RemoteOEMInfo']
+        info = ret['Oem'][oem_info]['RemoteOEMInfo']
         for i in range(0, len(info)):
             rets += chr(info[i])
     except Exception as e:
@@ -77,20 +82,19 @@ def read_bmc_info_by_redfish(ibmc):
 def write_bmc_info_by_redfish(ibmc, infostr):
     """
      Function:
-
      Args:
                ibmc       (class):
                infostr    (str):
-
      Returns:
-         ret = {"result": False, "msg": 'not run server profile yet'}
+         "result": False
+         "msg": 'not run server profile yet'
      Raises:
          Exception
      Examples:
-
      Author: xwh
      Date: 2019/10/9 20:30
     """
+    oem_info = ibmc.oem_info
     info = [0]
     for i in range(0, len(infostr)):
         info.append(ord(infostr[i]))
@@ -104,7 +108,7 @@ def write_bmc_info_by_redfish(ibmc, infostr):
         raise
     headers = {'content-type': 'application/json',
                'X-Auth-Token': token, 'If-Match': e_tag}
-    payload = {"Oem": {"Huawei": {"RemoteOEMInfo": info}}}
+    payload = {"Oem": {oem_info: {"RemoteOEMInfo": info}}}
     try:
         r = ibmc.request('PATCH', resource=ibmc.manager_uri,
                          headers=headers, data=payload, tmout=30)
@@ -126,12 +130,11 @@ def write_bmc_info_by_redfish(ibmc, infostr):
 def clear_bmc_info_by_redfish(ibmc):
     """
      Function:
-
      Args:
                ibmc       (class):
-
      Returns:
-         ret = {"result": False, "msg": 'not run server profile yet'}
+         "result": False
+         "msg": 'not run server profile yet'
      Raises:
          Exception
      Examples:
@@ -140,6 +143,7 @@ def clear_bmc_info_by_redfish(ibmc):
      Date: 2019/10/9 20:30
     """
     info = [0]
+    oem_info = ibmc.oem_info
     for i in range(0, 255):
         info.append(0)
     token = ibmc.get_token()
@@ -150,7 +154,7 @@ def clear_bmc_info_by_redfish(ibmc):
         raise
     headers = {'content-type': 'application/json',
                'X-Auth-Token': token, 'If-Match': e_tag}
-    payload = {"Oem": {"Huawei": {"RemoteOEMInfo": info}}}
+    payload = {"Oem": {oem_info: {"RemoteOEMInfo": info}}}
     try:
         r = ibmc.request('PATCH', resource=ibmc.manager_uri,
                          headers=headers, data=payload, tmout=30)
@@ -179,7 +183,8 @@ def deploy_os_process(ibmc, config_dic):
                config_dic    (dic): config dic
 
      Returns:
-         ret = {"result": False, "msg": 'not run server profile yet'}
+        "result": False
+        "msg": 'not run server profile yet'
      Raises:
          None
      Examples:

@@ -1,0 +1,23 @@
+---
+- hosts: myhosts
+  connection: local
+  name: import profile
+  gather_facts: False
+
+# file_name:  the file name you want to import
+# local_import: local file path of the Ansible environment to be imported.
+# remote_import: remote path for saving imported files. The file path can be /tmp on the BMC; or a folder on a remote file server, the format is protocol://ip/folder
+#    protocols: Available values: sftp,https,nfs,cifs,scp
+# file_server_user: remote file server user name
+# file_server_pswd: remote file server password
+
+  tasks:
+  - name: import profile
+    ibmc_profile_import:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      file_name: "172.26.0.1_20210318045050_profile.xml"
+      remote_import: "sftp://172.26.200.11/data/"
+      file_server_user: "{{sftp_user}}"
+      file_server_pswd: "{{sftp_pswd}}"

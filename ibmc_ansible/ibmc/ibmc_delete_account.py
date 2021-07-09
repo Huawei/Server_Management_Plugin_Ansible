@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,62 +10,57 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-ANSIBLE_METADATA = {
-    'metadata_version': '1.1',
-    'status': ['preview'],
-    'supported_by': 'community'
-}
+ANSIBLE_METADATA = {'metadata_version': '1.1',
+                    'status': ['preview'],
+                    'supported_by': 'community'}
 
-DOCUMENTATION = """
+DOCUMENTATION = r'''
 ---
 module: ibmc_delete_account
-
-short_description: delete an ibmc user
-
+short_description: Delete an ibmc user
 version_added: "2.5.0"
-
 description:
-    - "Delete an ibmc user"
-
+    - Delete an ibmc user
 options:
-  ibmc_ip:
-    required: true
-    default: None
-    description:
-      - iBMC IP address
-  ibmc_user:
-    required: true
-    default: None
-    description:
-      - iBMC user name used for authentication
-  ibmc_pswd:
-    required: true
-    default:
-    description:
-      - iBMC user password used for authentication
-  delete_account:
-    required: true
-    default: None
-    description:
-      - The iBMC user name to be deleted
-"""
+    ibmc_ip:
+        required: true
+        default: None
+        description:
+            - iBMC IP address
+    ibmc_user:
+        required: true
+        default: None
+        description:
+            - iBMC user name used for authentication
+    ibmc_pswd:
+        required: true
+        default:
+        description:
+            - iBMC user password used for authentication
+    delete_account:
+        required: true
+        default: None
+        description:
+            - The iBMC user name to be deleted
+'''
 
-EXAMPLES = r"""
- - name: delete ibmc account
-    ibmc_delete_account :
-      ibmc_ip: "{{ ibmc_ip }}"
-      ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}"
-      delete_account: "test"
-"""
+EXAMPLES = r'''
+- name: delete ibmc account
+  ibmc_delete_account :
+    ibmc_ip: "{{ ibmc_ip }}"
+    ibmc_user: "{{ ibmc_user }}"
+    ibmc_pswd: "{{ ibmc_pswd }}"
+    delete_account: "test"
+'''
 
-RETURNS = """
-    {"result": True, "msg": "Account deleted successfully!"}
-"""
+RETURNS = r'''
+    "msg": "Account deleted successfully!"
+'''
 
 from ansible.module_utils.basic import AnsibleModule
 
-from ibmc_ansible.ibmc_logger import log, report
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
 from ibmc_ansible.ibmc_redfish_api.api_manage_account import delete_account
 from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
 from ibmc_ansible.utils import ansible_ibmc_run_module

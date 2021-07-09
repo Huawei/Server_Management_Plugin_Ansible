@@ -1,0 +1,17 @@
+---
+- hosts: myhosts
+  connection: local
+  name: file download
+  gather_facts: False
+
+# file_name: the name of the file to be downloaded, from /tmp/web of iBMC
+# local_path: local path for storing files, The default file save path is /home/USER/ansible_ibmc/report/download/
+
+  tasks:
+  - name: file download
+    ibmc_download_file :
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      file_name: "SOO.keytab"
+      local_path: "/home/plugin/"

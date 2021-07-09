@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.ibmc_redfish_api.api_manage_raid import delete_raid
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -82,6 +75,16 @@ RETURNS = """
     {"result": True, "msg": "Delete RAID configuration successful!"}
 """
 
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.ibmc_redfish_api.api_manage_raid import delete_raid
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
+
 
 def ibmc_delete_raid_module(module):
     """
@@ -90,7 +93,8 @@ def ibmc_delete_raid_module(module):
     Args:
         module       (class):
     Returns:
-        {"result": False, "msg": 'not run delete raid yet'}
+        "result": False
+        "msg": 'not run delete raid yet'
     Raises:
         None
     Examples:

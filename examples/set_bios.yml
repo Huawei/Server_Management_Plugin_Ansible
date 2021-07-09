@@ -1,0 +1,19 @@
+---
+- hosts: myhosts
+  connection: local
+  name: set ibmc bios
+  gather_facts: False
+
+# Immediately: Whether to restart the system immediately for the configuration to take effect: True, False
+# bios_attribute: BIOS attributes set by the user
+
+  tasks:
+  - name: set ibmc bios
+    ibmc_set_bios :
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      Immediately: False
+      bios_attribute:
+          QuickBoot: Disabled
+          QuietBoot: Enabled

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.ibmc_redfish_api.api_manage_raid import create_raid
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -68,20 +61,13 @@ options:
   volumes/stripe_size:
     required: false
     default: None
-    choices:
-      - 65536
-      - 131072
-      - 262144
-      - 524288
-      - 1048576
+    choices: [65536, 131072, 262144, 524288, 1048576]
     description:
       - Stripe size of a volume, must be an integer. It is an optional parameter
   volumes/cachecade_flag:
     required: false
     default: None
-    choices:
-      - True
-      - False
+    choices: [True, False]
     description:
       - Whether it is a CacheCade volume. It is an optional parameter
   volumes/drives:
@@ -92,44 +78,31 @@ options:
   volumes/volume_raid_level:
     required: true
     default: None
-    choices:
-      - RAID0
-      - RAID1
-      - RAID5
-      - RAID6
-      - RAID10
-      - RAID50
-      - RAID60
+    choices: [RAID0, RAID1, RAID5, RAID6, RAID10, RAID50, RAID60]
     description:
       - RAID level of the volume. It is a mandatory parameter
   volumes/volume_name:
     required: false
     default: None
     description:
-      - Volume name. It is an optional parameter. A string of up to 15 bytes. Value range ASCII code corresponding to 0x20 to 0x7E
+      - Volume name. It is an optional parameter. A string of up to 15 bytes.
+        Value range ASCII code corresponding to 0x20 to 0x7E
   volumes/df_read_policy:
     required: false
     default: None
-    choices:
-      - NoReadAhead
-      - ReadAhead
+    choices: [NoReadAhead, ReadAhead]
     description:
       - Default read policy of the volume. It is an optional parameter
   volumes/df_write_policy:
     required: false
     default: None
-    choices:
-      - WriteThrough
-      - WriteBackWithBBU
-      - WriteBack
+    choices: [WriteThrough, WriteBackWithBBU, WriteBack]
     description:
       - Default write policy of the volume. It is an optional parameter
   volumes/df_cache_policy:
     required: false
     default: None
-    choices:
-      - CachedIO
-      - DirectIO
+    choices: [CachedIO, DirectIO]
     description:
       - Default cache policy of the volume. It is an optional parameter
   volumes/span_num:
@@ -142,28 +115,19 @@ options:
   volumes/access_policy:
     required: false
     default: None
-    choices:
-      - ReadWrite
-      - ReadOnly
-      - Blocked
+    choices: [ReadWrite, ReadOnly, Blocked]
     description:
       - Volume access policy. It is an optional parameter
   volumes/disk_cache_policy:
     required: false
     default: None
-    choices:
-      - Unchanged
-      - Enabled
-      - Disabled
+    choices: [Unchanged, Enabled, Disabled]
     description:
       - Cache policy for member disks. It is an optional parameter
   volumes/init_mode:
     required: false
     default: None
-    choices:
-      - UnInit
-      - QuickInit
-      - FullInit
+    choices: [UnInit, QuickInit, FullInit]
     description:
       - Volume initialization mode. It is an optional parameter
 """
@@ -194,6 +158,16 @@ EXAMPLES = """
 RETURNS = """
     {"result": True, "msg": "Create RAID configuration successful!"}
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.ibmc_redfish_api.api_manage_raid import create_raid
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
+from ibmc_ansible.utils import is_support_server
 
 
 def ibmc_create_raid_module(module):

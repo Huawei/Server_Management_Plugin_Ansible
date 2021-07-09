@@ -1,0 +1,12 @@
+---
+- hosts: myhosts
+  connection: local
+  name: clear sel logs
+  gather_facts: False
+
+  tasks:
+  - name: clear sel logs
+    ibmc_clear_sel_logs:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"

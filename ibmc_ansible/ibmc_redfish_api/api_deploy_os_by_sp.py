@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -12,8 +12,11 @@
 
 import time
 
-from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import sp_api_set_sp_service, sp_api_get_status, \
-    SP_STATUS_WORKING, WAIT_SP_START_TIME, CHECK_INTERVAL
+from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import sp_api_set_sp_service
+from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import sp_api_get_status
+from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import SP_STATUS_WORKING
+from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import WAIT_SP_START_TIME
+from ibmc_ansible.ibmc_redfish_api.api_inband_fw_update import CHECK_INTERVAL
 from ibmc_ansible.ibmc_redfish_api.api_power_manager import manage_power
 
 from ibmc_ansible.utils import set_result
@@ -160,8 +163,9 @@ def un_mount_file(ibmc):
      Date: 10/26/2019
     """
     token = ibmc.get_token()
+    oem_info = ibmc.oem_info
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
-    uri = "%s/VirtualMedia/CD/Oem/Huawei/Actions/VirtualMedia.VmmControl" % ibmc.manager_uri
+    uri = "%s/VirtualMedia/CD/Oem/%s/Actions/VirtualMedia.VmmControl" % (ibmc.manager_uri, oem_info)
     payload = {'VmmControlType': 'Disconnect'}
     try:
         r = ibmc.request('POST', resource=uri,
@@ -243,8 +247,9 @@ def mount_file(ibmc, os_img):
      Date: 10/26/2019
     """
     token = ibmc.get_token()
+    oem_info = ibmc.oem_info
     headers = {'content-type': 'application/json', 'X-Auth-Token': token}
-    uri = "%s/VirtualMedia/CD/Oem/Huawei/Actions/VirtualMedia.VmmControl" % ibmc.manager_uri
+    uri = "%s/VirtualMedia/CD/Oem/%s/Actions/VirtualMedia.VmmControl" % (ibmc.manager_uri, oem_info)
     payload = {'VmmControlType': 'Connect', 'Image': os_img}
     ret = False
     try:

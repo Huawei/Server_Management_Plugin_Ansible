@@ -54,7 +54,7 @@
         NetCfg:
            - Device:
                 Name: "eth10086"
-                MAC: "04:B0:E7:48:27:84"
+                MAC: "**:**:**:**:**:**"
              IPv4Addresses:
                 - Address: "192.168.2.44"
                   SubnetMask: "255.255.0.0"

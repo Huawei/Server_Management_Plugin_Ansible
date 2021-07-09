@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.ibmc_redfish_api.api_manage_ibmc_ip import set_ibmc_ip
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.utils import ansible_ibmc_run_module, MSG_FORMAT, SERVERTYPE, is_support_server
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -53,10 +46,7 @@ options:
   ip_version:
     required: false
     default: None
-    choices:
-      - IPv4
-      - IPv6
-      - IPv4AndIPv6
+    choices: [IPv4, IPv6, IPv4AndIPv6]
     description:
       - Whether IPv4/IPv6 is enabled
   ipv4_addr:
@@ -82,9 +72,7 @@ options:
   ipv4_addr/address_origin:
     required: false
     default: None
-    choices:
-      - Static
-      - DHCP
+    choices: [Static, DHCP]
     description:
       - How the IPv4 address is allocated
   ipv6_addr:
@@ -105,9 +93,7 @@ options:
   ipv6_addr/address_origin:
     required: false
     default: None
-    choices:
-      - Static
-      - DHCPv6
+    choices: [Static, DHCPv6]
     description:
       - How the IPv6 address is allocated
   ipv6_gateway:
@@ -139,6 +125,17 @@ EXAMPLES = """
 RETURNS = """
     {"result": True, "msg": "Set iBMC ethernet interface info successful!"}
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.ibmc_redfish_api.api_manage_ibmc_ip import set_ibmc_ip
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import MSG_FORMAT
+from ibmc_ansible.utils import SERVERTYPE
 
 
 def ibmc_set_ip_module(module):

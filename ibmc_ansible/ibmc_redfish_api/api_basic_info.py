@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -13,12 +13,15 @@
 import os
 import json
 
-from ibmc_ansible.utils import write_result, write_result_csv
+from ibmc_ansible.utils import write_result
+from ibmc_ansible.utils import write_result_csv
 from ibmc_ansible.utils import IBMC_REPORT_PATH
 
-VER_HEADER = ["ProductName", "Model", "Status", "SerialNumber", "AssetTag", "iBMCVersion", "BiosVersion", "CPLDVersion",
+VER_HEADER = ["ProductName", "Model", "Status", "SerialNumber", "AssetTag",
+              "iBMCVersion", "BiosVersion", "CPLDVersion",
               "SPVersion"]
-SUMMARY_HEADER = ["CPUCount", "CPUStatus", "MemoryGiB", "MemoryStatus", "DriveCount", "DriveStatus"]
+SUMMARY_HEADER = ["CPUCount", "CPUStatus", "MemoryGiB", "MemoryStatus",
+                  "DriveCount", "DriveStatus"]
 
 
 def get_drives_info(ibmc, chassis_json):
@@ -29,7 +32,8 @@ def get_drives_info(ibmc, chassis_json):
          ibmc:   IbmcBaseConnect Object
          chassis_json: chassis resource info
     Returns:
-        {"BiosVersion": "1.17", "SerialNumber": "42353423"}
+        "BiosVersion": "1.17"
+        "SerialNumber": "42353423"
     Raises:
         Exception
     Examples:
@@ -82,7 +86,8 @@ def get_mem_info(ibmc, systems_json):
          ibmc:   IbmcBaseConnect Object
          systems_json: systems resource
     Returns:
-        {"BiosVersion": "1.17", "SerialNumber": "42353423"}
+        "BiosVersion": "1.17"
+        "SerialNumber": "42353423"
     Raises:
         Exception
     Examples:
@@ -141,7 +146,8 @@ def get_cpu_info(ibmc, systems_json):
          ibmc:   IbmcBaseConnect Object
          systems_json : system resource
     Returns:
-        {"BiosVersion": "1.17", "SerialNumber": "42353423"}
+        "BiosVersion": "1.17"
+        "SerialNumber": "42353423"
     Raises:
         Exception
     Examples:
@@ -278,7 +284,9 @@ def get_server_info(ibmc, systems_r, manager_r, chassis_r):
          manager_r:  Manager resource info
          chassis_r:  Chassis resource info
     Returns:
-        {"iBMCVersion": "6.50", "BiosVersion": "1.17", "CPLDVersion": "1.04(U108)"}
+        "iBMCVersion": "6.50"
+        "BiosVersion": "1.17"
+        "CPLDVersion": "1.04(U108)"
     Raises:
         Exception
     Examples:
@@ -288,6 +296,7 @@ def get_server_info(ibmc, systems_r, manager_r, chassis_r):
     """
     js = {}
     summary = {}
+    oem_info = ibmc.oem_info
 
     try:
         # get iBMC, BIOS, CPLD version
@@ -297,8 +306,8 @@ def get_server_info(ibmc, systems_r, manager_r, chassis_r):
         js['CPLDVersion'] = cpld_info.get('Version')
 
         # get oem info
-        systems_oem = systems_r['Oem']['Huawei']
-        chassis_oem = chassis_r['Oem']['Huawei']
+        systems_oem = systems_r['Oem'][oem_info]
+        chassis_oem = chassis_r['Oem'][oem_info]
 
         # get server basic info
         js['ProductName'] = systems_oem.get('ProductName')
@@ -321,8 +330,8 @@ def get_server_info(ibmc, systems_r, manager_r, chassis_r):
         summary['PowerSupplySummary'] = chassis_oem.get('PowerSupplySummary')
         summary['DriveSummary'] = chassis_oem.get('DriveSummary')
         fan_info = get_fan_info(ibmc, chassis_r)
-        if 'FanSummary' in fan_info['Oem']['Huawei'].keys():
-            summary['FanSummary'] = fan_info['Oem']['Huawei']['FanSummary']
+        if 'FanSummary' in fan_info['Oem'][oem_info].keys():
+            summary['FanSummary'] = fan_info['Oem'][oem_info]['FanSummary']
         else:
             summary['FanSummary'] = None
         js['Summary'] = summary
@@ -340,7 +349,8 @@ def get_sp_info(ibmc):
     Args:
          ibmc:   IbmcBaseConnect Object
     Returns:
-        {"result": True, "msg": "Get sp info successful!"}
+        "result": True
+        "msg": "Get sp info successful!"
     Raises:
         Exception
     Examples:
@@ -419,7 +429,8 @@ def get_basic_info(ibmc, csv_format=False):
          ibmc:         IbmcBaseConnect Object
          csv_format (bool):  Whether to write the result to a CSV file
     Returns:
-        {"result": True, "msg": "Get basic info successful!"}
+        "result": True
+        "msg": "Get basic info successful!"
     Raises:
         Exception
     Examples:
@@ -491,7 +502,7 @@ def get_basic_info(ibmc, csv_format=False):
         # write the result to json file
         write_result(ibmc, file_name, result)
 
-    ret = {'result': True, 'msg': 'Get basic info successful! For more detail information, '
+    ret = {'result': True, 'msg': 'Get basic info successful! For more detail information,'
                                   'please refer the report log: %s' % file_name}
 
     return ret

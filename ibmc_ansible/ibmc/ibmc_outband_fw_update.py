@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,24 +10,16 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_outband_fw_update import update_fw
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
 DOCUMENTATION = """
 module: ibmc_outband_fw_update
-short_description: update outband firmware 
+short_description: update outband firmware
 version_added: "2.5.0"
-description: update outband firmware 
+description: update outband firmware
 options:
-  
   ibmc_ip:
     required: true
     default: None
@@ -40,65 +32,110 @@ options:
       - iBMC user name used for authentication
   ibmc_pswd:
     required: true
-    default: 
+    default: None
     description:
-      - iBMC user password used for authentication 
-  image_url:
-    required: true
-    default: 
-    description:  
-      - firmware path  
-  protocol:  
+      - iBMC user password used for authentication
+  local_file:
     required: false
-    default: 
-    description: 
-      - protocol which used to download  firmware  
-    choice:
-      - HTTPS
-      - SCP
-      - SFTP
-      - CIFS
-      - TFTP
-      - NFS           
+    default: None
+    description:
+      - local firmware path
+  remote_file:
+    required: false
+    default: None
+    description:
+      - remote firmware path or bmc file path
+  file_server_user:
+    required: false
+    default: None
+    description:
+      - remote file server user name
+  file_server_pswd:
+    required: false
+    default: None
+    description:
+      - remote file server password
 """
+
 EXAMPLES = r"""
- - name: outband fw update
+  - name: update outband fw
     ibmc_outband_fw_update:
       ibmc_ip: "{{ ibmc_ip }}"
       ibmc_user: "{{ ibmc_user }}"
-      ibmc_pswd: "{{ ibmc_pswd }}" 
-      image_url:"nfs://172.16.2.2/tmp/package/cpldimage.hpm"
-      protocol:'NFS'
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      local_file: "/home/plugin/cpldimage.hpm"
 """
 
 RETURNS = """
-   
+
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.ibmc_redfish_api.api_outband_fw_update import update_fw
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import SERVERTYPE
+from ibmc_ansible.utils import set_result
+from ibmc_ansible.utils import remote_file_path
 
 
 def ibmc_outband_fw_update_module(module):
     """
-    Function:
-
+    Function: Outband firmware upgrade
     Args:
-              ansible_module       (class):
-
+        module : information from yml
     Returns:
-        ret = {"result": False, "msg": 'not run update outband firmware yet'}
+        ret : Task result
+            "result": True or False
+            "msg": description for success or failure
     Raises:
-        Exception
-    Examples:
-
-    Author: xwh
+        None
     Date: 2019/10/9 20:30
     """
-    ret = {"result": False, "msg": 'not run update outband firmware yet'}
     with IbmcBaseConnect(module.params, log, report) as ibmc:
-        if (module.params.has_key("protocol")):
-            ret = update_fw(ibmc, module.params["image_url"], module.params["protocol"])
-        else:
-            ret = update_fw(ibmc, module.params["image_url"])
+        ret = is_support_server(ibmc, SERVERTYPE)
+        if ret['result']:
+            all_file = (module.params.get("local_file"), module.params.get("remote_file"))
+            if all(all_file) or not any(all_file):
+                log_error = "Please select an out-of-band firmware upgrade " \
+                            "mode from local_file and remote_file."
+                set_result(ibmc.log_error, log_error, False, ret)
+                return ret
+        try:
+            local, file, protocol = get_file_name(module)
+        except Exception as e:
+            log_error = "Update failed! %s" % str(e)
+            set_result(ibmc.log_error, log_error, False, ret)
+            return ret
+
+        ret = update_fw(ibmc, file, protocol, local)
     return ret
+
+
+def get_file_name(module):
+    """
+    Function: Obtain the name of the upgrade package.
+    Args:
+        module: information from yml
+    Returns:
+        local: Whether to upload the upgrade package from the local host
+        file: the name of the upgrade package
+        protocol: File Server Protocol
+    """
+    protocol = None
+    local = False
+    file = module.params.get("local_file") or module.params.get("remote_file")
+    if file == module.params.get("local_file"):
+        local = True
+    elif not file.startswith("/tmp"):
+        file = remote_file_path(file, module)
+        protocol, server_path = file.split("://")
+        protocol = protocol.upper()
+    return local, file, protocol
 
 
 def main():
@@ -107,8 +144,10 @@ def main():
             "ibmc_ip": {"required": True, "type": 'str'},
             "ibmc_user": {"required": True, "type": 'str'},
             "ibmc_pswd": {"required": True, "type": 'str', "no_log": True},
-            "image_url": {"required": True, "type": 'str', "no_log": True},
-            "protocol": {"required": False, "type": 'str'}
+            "local_file": {"required": False, "type": 'str'},
+            "remote_file": {"required": False, "type": 'str'},
+            "file_server_user": {"required": False, "type": 'str', "no_log": True},
+            "file_server_pswd": {"required": False, "type": 'str', "no_log": True}
         },
         supports_check_mode=False)
     ansible_ibmc_run_module(ibmc_outband_fw_update_module, module, log, report)

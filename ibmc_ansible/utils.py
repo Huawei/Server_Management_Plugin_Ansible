@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -13,18 +13,27 @@
 import csv
 import json
 import logging
-import logging.handlers as handlers
 import os
 import re
 import subprocess
+import stat
+
+from ibmc_ansible.logger_permission import SetLogPermission
+
 try:
     import ConfigParser as cp
 except ImportError:
     import configparser as cp
+try:
+    USER = os.popen('whoami').read().split("\n")[0]
+except Exception as e:
+    print("Unable to get current user name, the error as %s" % str(e))
+    raise
 
-IBMC_REPORT_PATH = "/var/log/ansible/ibmc/report"
-IBMC_LOG_PATH = "/var/log/ansible/ibmc/log"
+IBMC_LOG_PATH = "/home/%s/ansible_ibmc/log" % USER
+IBMC_REPORT_PATH = "/home/%s/ansible_ibmc/report" % USER
 IBMC_EXCU_PATH = "/home/ibmc_ansible"
+BASIC_PATH = "/home/%s/ansible_ibmc" % USER
 MSG_FORMAT = "%s -- %s"
 
 # Switch type
@@ -99,7 +108,8 @@ def ansible_get_loger(log_file, report_file, logger_name):
             reportFile         (str):
             loggerName         (str):
     Returns:
-        (log ,report)
+        log
+        report
     Raises:
         None
     Examples:
@@ -110,14 +120,15 @@ def ansible_get_loger(log_file, report_file, logger_name):
     LOG_FILE = log_file
     REPORT_FILE = report_file
 
-    log_hander = handlers.RotatingFileHandler(LOG_FILE, maxBytes=1024 * 1024, backupCount=100)
+    log_hander = SetLogPermission(LOG_FILE, max_bytes=1024 * 1024, backup_count=100)
     fmt = logging.Formatter("[%(asctime)s %(levelname)s ]- %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
     log_hander.setFormatter(fmt)
     log = logging.getLogger(logger_name)
     log.addHandler(log_hander)
     log.setLevel(logging.INFO)
+
     fmt = logging.Formatter("[%(asctime)s %(levelname)s ] - %(message)s", datefmt='%Y-%m-%d %H:%M:%S')
-    report_hander = handlers.RotatingFileHandler(REPORT_FILE, maxBytes=1024 * 1024, backupCount=100)
+    report_hander = SetLogPermission(REPORT_FILE, max_bytes=1024 * 1024, backup_count=100)
     report_hander.setFormatter(fmt)
     report = logging.getLogger(logger_name + "report")
     report.addHandler(report_hander)
@@ -149,17 +160,16 @@ def write_result(ibmc, result_file, result):
         result_path = os.path.dirname(result_file)
         if not os.path.exists(result_path):
             subprocess.call(["mkdir", "-p", result_path], shell=False)
+            os.chmod(result_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
         # Write the results to the file as an overlay
-        json_file = open(result_file, "w")
-        if json_file and result:
-            json.dump(result, json_file, indent=4)
+        with open(result_file, "w") as json_file:
+            if json_file and result:
+                json.dump(result, json_file, indent=4)
+        os.chmod(result_file, stat.S_IRUSR | stat.S_IWUSR)
     except IOError as e:
         ibmc.log_error("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
         ibmc.report_error("Failed to write result to %s" % result_file)
         raise IOError("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
-    finally:
-        if json_file is not None:
-            json_file.close()
 
 
 def write_result_csv(ibmc, result_file, header_csv, result_csv):
@@ -187,18 +197,16 @@ def write_result_csv(ibmc, result_file, header_csv, result_csv):
         result_path = os.path.dirname(result_file)
         if not os.path.exists(result_path):
             subprocess.call(["mkdir", "-p", result_path], shell=False)
+            os.chmod(result_path, stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
         # Write the results to the csv file
-        csv_file = open(result_file, 'w')
-        csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(header_csv)
-        csv_writer.writerow(result_csv)
+        with open(result_file, 'w') as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(header_csv)
+            csv_writer.writerow(result_csv)
     except IOError as e:
         ibmc.log_error("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
         ibmc.report_error("Failed to write result to %s" % result_file)
         raise IOError("Failed to write result to %s, the error info is: %s" % (result_file, str(e)))
-    finally:
-        if csv_file is not None:
-            csv_file.close()
 
 
 def validate_ipv4(ip_str):
@@ -351,6 +359,35 @@ def read_ssl_verify(log):
         return True
 
 
+def read_ssl_ciphers(log):
+    """
+    Function:
+        read_ssl_ciphers
+    Args:
+        ciphers str
+    Returns:
+       None
+    Raises:
+       Exception
+    Examples:
+       None
+    Author:
+    Date: 11/16/2020
+    """
+    try:
+        cfg = cp.ConfigParser()
+        cfg_path = os.path.join(IBMC_EXCU_PATH, "ssl.cfg")
+        cfg.read(cfg_path)
+        ciphers = cfg.get("ssl", "ciphers")
+        if ciphers is None:
+            return ""
+        else:
+            return ciphers
+    except Exception as e:
+        log.info("read ssl_cfg exception : %s" % str(e))
+        return ""
+
+
 def read_ssl_force_tls(log):
     """
     Function:
@@ -383,7 +420,7 @@ def read_ssl_force_tls(log):
         return True
 
 
-def set_ssl_cfg(verify, force_tls1_2, log):
+def set_ssl_cfg(verify, force_tls1_2, ciphers, log):
     """
     Function:
         set ssl cfg
@@ -400,10 +437,15 @@ def set_ssl_cfg(verify, force_tls1_2, log):
     """
     cfg_path = os.path.join(IBMC_EXCU_PATH, "ssl.cfg")
     try:
+        if ciphers is None:
+            _ciphers = ''
+        else:
+            _ciphers = ciphers
         with open(cfg_path, "r+") as file:
             file.truncate()
             file.seek(0)
-            file.write("[ssl]\nverify = %s\nforce_tls1_2 = %s" % (str(verify), str(force_tls1_2)))
+            file.write("[ssl]\nverify = %s\nforce_tls1_2 = %s\nciphers = %s" % (
+                str(verify), str(force_tls1_2), str(_ciphers)))
             log.info("set ssl_cfg sucessful")
             return True
     except Exception as e:
@@ -448,7 +490,8 @@ def is_support_server(ibmc, type):
                 SERVERSWITYPE,
                 SERVERHMMTYPE
     Returns:
-            ret{"result":False,"msg": 'The function is not supported!'}
+            "result":False
+            "msg": 'The function is not supported!'
     Raises:
        Exception
     Examples:
@@ -465,3 +508,31 @@ def is_support_server(ibmc, type):
         ret['result'] = False
         ret['msg'] = "The function is not supported!"
     return ret
+
+
+def remote_file_path(file_path, module):
+    """
+    Function:
+        get file name on remote file server
+    Args:
+        module : information from yml
+        file_path: User-configured remote file server path
+    Returns:
+        file_path: Path of the combined remote file server
+    Raises:
+        None
+    Date: 2021/6/7 20:30
+    """
+    # File server type
+    FILE_SERVER = ("sftp", "https", "nfs", "cifs", "scp")
+    protocol, server_path = file_path.split("://")
+    protocol = protocol.lower()
+    if protocol not in FILE_SERVER:
+        msg = "The protocol error, please choose from [sftp, https, nfs, cifs, scp] \n"
+        raise Exception(msg)
+    if module.params.get("file_server_user") and module.params.get(
+            "file_server_pswd"):
+        file_path = "%s://%s:%s@%s" % \
+                    (protocol, module.params.get("file_server_user"),
+                     module.params.get("file_server_pswd"), server_path)
+    return file_path

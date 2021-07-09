@@ -1,0 +1,19 @@
+---
+- hosts: myhosts
+  connection: local
+  name: common api
+  gather_facts: False
+
+# url: request resource
+# request_method: request method: GET, POST, PATCH, DELETE
+# request_body: request body content
+
+  tasks:
+  - name: common api
+    ibmc_common_api:
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      url: "/redfish/v1/Chassis/1/Oem/Huawei/Actions/Chassis.ControlIndicatorLED"
+      request_method: "POST"
+      request_body: '{"IndicatorLED":"Blinking", "Duration":50}'

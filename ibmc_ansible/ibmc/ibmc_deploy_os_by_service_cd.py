@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_service_cd import deploy_os_process
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
 
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
@@ -58,41 +51,15 @@ options:
     default:
     description:
       - os type
-    choice:
-      - CentOS6U7_x64
-      - CentOS6U8_x64
-      - CentOS6U9_x64
-      - CentOS7U0_x64
-      - CentOS7U1_x64
-      - CentOS7U2_x64
-      - CentOS7U3_x64
-      - CentOS7U4_x64
-      - CentOS7U5_x64
-      - RHEL6U7_x64
-      - RHEL6U8_x64
-      - RHEL6U9_x64
-      - RHEL7U0_x64
-      - RHEL7U1_x64
-      - RHEL7U2_x64
-      - RHEL7U3_x64
-      - RHEL7U4_x64
-      - RHEL7U5_x64
-      - SLES11SP3_x64
-      - SLES11SP4_x64
-      - SLES12_x64
-      - SLES12SP1_x64
-      - SLES12SP2_x64
-      - SLES12SP3_x64
-      - ESXi5.5_x64
-      - ESXi6.0_x64
-      - ESXi6.5_x64
-      - ESXi6.7_x64
-      - Win2008_R2_x64
-      - Win2012_x64
-      - Win2012_R2_x64
-      - Win2016_x64
-      - Ubuntu16.04_x64
-      - Ubuntu14.04_x64
+    choice: [
+        CentOS6U7_x64, CentOS6U8_x64, CentOS6U9_x64, CentOS7U0_x64,
+        CentOS7U1_x64, CentOS7U2_x64, CentOS7U3_x64, CentOS7U4_x64, CentOS7U5_x64,
+        RHEL6U7_x64, RHEL6U8_x64, RHEL6U9_x64, RHEL7U0_x64, RHEL7U1_x64,
+        RHEL7U2_x64, RHEL7U3_x64, RHEL7U4_x64, RHEL7U5_x64, SLES11SP3_x64,
+        SLES11SP4_x64, SLES12_x64, SLES12SP1_x64, SLES12SP2_x64, SLES12SP3_x64,
+        ESXi5.5_x64, ESXi6.0_x64, ESXi6.5_x64, ESXi6.7_x64, Win2008_R2_x64,
+        Win2012_x64, Win2016_x64, Ubuntu16.04_x64, Ubuntu14.04_x64
+        ]
   cd_key:
     required : false
     default:
@@ -143,10 +110,7 @@ options:
     default:
     description:
       - mode to install;1 for standard, 2 for full , 3 for Customized
-    choice:
-      - "1"
-      - "2"
-      - "3"
+    choice: ["1", "2", "3"]
   rpms:
     required : false
     default:
@@ -162,35 +126,25 @@ options:
     default:
     description:
       - software you want to install
-    choice:
-      - "ibma"
+    choice: ["ibma"]
   win_os_name:
     required : false
     default:
     description: windows os name , only for windows os
-    choice:
-      - Windows Server 2016 ServerStandard
-      - Windows Server 2016 ServerStandardCore
-      - Windows Server 2016 ServerDataCenter
-      - Windows Server 2016 ServerDataCenterCore
-      - Windows Server 2012 R2 ServerStandard
-      - Windows Server 2012 R2 ServerStandardCore
-      - Windows Server 2012 R2 ServerDataCenter
-      - Windows Server 2012 R2 ServerDataCenterCore
-      - Windows Server 2012 ServerStandard
-      - Windows Server 2012 ServerStandardCore
-      - Windows Server 2012 ServerDataCenter
-      - Windows Server 2012 ServerDataCenterCore
-      - Windows Server 2008 R2 ServerStandard
-      - Windows Server 2008 R2 ServerStandardCore
-      - Windows Server 2008 R2 ServerEnterprise,
-      - Windows Server 2008 R2 ServerEnterpriseCore
-      - Windows Server 2008 R2 ServerDataCenter
-      - Windows Server 2008 R2 ServerDataCenterCore
-      - Windows Server 2008 R2 ServerWeb
-      - Windows Server 2008 R2 ServerWebCore
-
+    choice: [
+        Windows Server 2016 ServerStandard, Windows Server 2016 ServerStandardCore,
+        Windows Server 2016 ServerDataCenter, Windows Server 2016 ServerDataCenterCore,
+        Windows Server 2012 R2 ServerStandard, Windows Server 2012 R2 ServerStandardCore,
+        Windows Server 2012 R2 ServerDataCenter, Windows Server 2012 R2 ServerDataCenterCore
+        Windows Server 2012 ServerStandard, Windows Server 2012 ServerStandardCore,
+        Windows Server 2012 ServerDataCenter, Windows Server 2012 ServerDataCenterCore,
+        Windows Server 2008 R2 ServerStandard, Windows Server 2008 R2 ServerStandardCore,
+        Windows Server 2008 R2 ServerEnterprise, Windows Server 2008 R2 ServerEnterpriseCore,
+        Windows Server 2008 R2 ServerDataCenter, Windows Server 2008 R2 ServerDataCenterCore
+        Windows Server 2008 R2 ServerWeb, Windows Server 2008 R2 ServerWebCore
+        ]
 """
+
 EXAMPLES = r"""
 tasks:
   - name: deploy os by service cd
@@ -217,6 +171,16 @@ tasks:
       script:
       software: "ibma"
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.ibmc_redfish_api.api_deploy_os_by_service_cd import deploy_os_process
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
 
 
 def ibmc_deploy_os_by_service_cd_process(module):

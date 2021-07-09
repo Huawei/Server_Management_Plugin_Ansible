@@ -1,0 +1,23 @@
+---
+- hosts: myhosts
+  connection: local
+  name: collect logs
+  gather_facts: False
+
+# save_mode: place to save logs: local, sftp, https, nfs, cifs, scp
+# file_server_ip: ip address of file server, if save_mode is local, this parameter can be left blank.
+# file_server_user: the user of file server
+# file_server_pswd: the password of file server
+# file_name: Log file storage path and file name
+
+  tasks:
+  - name: collect ibmc logs
+    ibmc_collect_logs :
+      ibmc_ip: "{{ ibmc_ip }}"
+      ibmc_user: "{{ ibmc_user }}"
+      ibmc_pswd: "{{ ibmc_pswd }}"
+      save_mode: "sftp"
+      file_server_ip: "sftp_server_ip"
+      file_server_user: "{{ sftp_user }}"
+      file_server_pswd: "{{ sftp_pswd }}"
+      file_name: "/usr/dump.tar.gz"

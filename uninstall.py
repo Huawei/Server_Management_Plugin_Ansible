@@ -1,60 +1,1 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
-
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License v3.0+
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License v3.0+ for more detail
-
-import os
-import subprocess
-import sys
-
-from ibmc_ansible.utils import IBMC_EXCU_PATH
-
-print('start uninstalling Huawei ibmc_ansible module')
-try:
-    import ansible
-    from ansible.module_utils.six.moves import input
-except ImportError as e:
-    print("Ansible is not installed.")
-    sys.exit(1)
-
-ansible_installed_path = ansible.__path__[0]
-flag_remove_example = False
-ibmc_lib_path = os.path.join(ansible_installed_path, "modules")
-if os.path.exists(os.path.join(ibmc_lib_path, 'ibmc')):
-    while True:
-        print("do you want to keep the yml files?(y/n)")
-        choice = input()
-        if choice in ['y', 'Y']:
-            break
-        elif choice in ['n', 'N']:
-            flag_remove_example = True
-            break
-        else:
-            print("you have press the wrong key")
-    ret = subprocess.call(["rm", "-rf", os.path.join(ibmc_lib_path, 'ibmc')], shell=False)
-    if ret != 0:
-        print("rm ibmc_ansible_module failed")
-
-    ibmc_utils_path = os.path.join(ansible_installed_path, "../")
-    ibmc_utils_path = os.path.join(ibmc_utils_path, "ibmc_ansible")
-
-    ret = subprocess.call(["rm", "-rf", ibmc_utils_path], shell=False)
-    if ret != 0:
-        print("rm ibmc_ansible_refish api  failed")
-    if flag_remove_example:
-        ret = subprocess.call(["rm", "-rf", IBMC_EXCU_PATH], shell=False)
-        if ret != 0:
-            print("rm ibmc ansible yml failed")
-    print("finish uninstalling ibmc_ansible modules")
-    sys.exit(0)
-
-else:
-    print("can not find ibmc_ansible module !")
-    sys.exit(1)
+#!/usr/bin/python# -*- coding: UTF-8 -*-# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.# This program is free software; you can redistribute it and/or modify# it under the terms of the GNU General Public License v3.0+# This program is distributed in the hope that it will be useful,# but WITHOUT ANY WARRANTY; without even the implied warranty of# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the# GNU General Public License v3.0+ for more detailimport osimport subprocessimport sysfrom ibmc_ansible.utils import IBMC_EXCU_PATHtry:    import ansible    from ansible.module_utils.six.moves import inputexcept ImportError as e:    print("Ansible is not installed.")    sys.exit(1)def delete_log():    """    Function:        Deletes files generated during plug-in running.    Args:        None    Returns:        delete: bool, whether the file is deleted successfully.    Raises:        None    Date: 6/24/2021    """    flag_remove_example = False    delete = True    ansible_folders = []    for cur_dir, folders, _ in os.walk("/home"):        for folder in folders:            if folder != "ansible_ibmc":                continue            parent_dir_name = os.path.basename(cur_dir)            if parent_dir_name != "Huawei_iBMC_Ansible_Module":                ansible_folders.append(os.path.join(cur_dir, folder))    if not ansible_folders:        print("can not find ibmc_ansible log.")        return False    while True:        print("do you want to keep the log files and plug-in generation file?(y/n)")        choice = input()        if choice in ['y', 'Y']:            break        elif choice in ['n', 'N']:            flag_remove_example = True            break        else:            print("you have press the wrong key")    if not flag_remove_example:        return True    for folder in ansible_folders:        ret = subprocess.call(["rm", "-rf", folder], shell=False)        if ret != 0:            print("rm %s failed!" % folder)            delete = False    if delete:        print("rm ibmc_ansible log successfully!")    return deletedef delete_install_file():    """    Function:        Deletes files generated during plug-in installation.    Args:        None    Returns:        delete: bool, whether the file is deleted successfully.    Raises:        None    Date: 6/24/2021    """    ansible_installed_path = ansible.__path__[0]    ibmc_lib_path = os.path.join(ansible_installed_path, "modules")    flag_remove_example = False    delete = True    if not os.path.exists(os.path.join(ibmc_lib_path, 'ibmc')):        print("can not find ibmc_ansible module !")        return False    while True:        print("do you want to keep the yml files?(y/n)")        choice = input()        if choice in ['y', 'Y']:            break        elif choice in ['n', 'N']:            flag_remove_example = True            break        else:            print("you have press the wrong key")    ret = subprocess.call(        ["rm", "-rf", os.path.join(ibmc_lib_path, 'ibmc')], shell=False)    if ret != 0:        print("rm ibmc_ansible_module failed!")    ibmc_utils_path = os.path.join(ansible_installed_path, "../")    ibmc_utils_path = os.path.join(ibmc_utils_path, "ibmc_ansible")    ret = subprocess.call(["rm", "-rf", ibmc_utils_path], shell=False)    if ret != 0:        delete = False        print("rm ibmc_ansible_refish api  failed!")    if flag_remove_example:        ret = subprocess.call(["rm", "-rf", IBMC_EXCU_PATH], shell=False)        if ret != 0:            delete = False            print("rm ibmc ansible yml failed!")    return deleteprint('start uninstalling Huawei_ibmc_ansible module')delete_install = delete_install_file()delete_log = delete_log()if delete_install and delete_log:    print("uninstalling Huawei_ibmc_ansible successfully!")    sys.exit(1)else:    sys.exit(0)

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -9,13 +9,6 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
-
-from ansible.module_utils.basic import AnsibleModule
-
-from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
-from ibmc_ansible.ibmc_redfish_api.api_manage_raid import modify_raid
-from ibmc_ansible.ibmc_logger import log, report
-from ibmc_ansible.utils import ansible_ibmc_run_module, SERVERTYPE, is_support_server
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -69,71 +62,54 @@ options:
     required: false
     default: None
     description:
-      - Volume name. It is an optional parameter. A string of up to 15 bytes. Value range ASCII code corresponding to 0x20 to 0x7E
+      - Volume name. It is an optional parameter. A string of up to 15 bytes.
+        Value range ASCII code corresponding to 0x20 to 0x7E
   volumes/df_read_policy:
     required: false
     default: None
-    choices:
-      - NoReadAhead
-      - ReadAhead
+    choices: [NoReadAhead, ReadAhead]
     description:
       - Default read policy of the volume. It is an optional parameter
   volumes/df_write_policy:
     required: false
     default: None
-    choices:
-      - WriteThrough
-      - WriteBackWithBBU
-      - WriteBack
+    choices: [WriteThrough, WriteBackWithBBU, WriteBack]
     description:
       - Default write policy of the volume. It is an optional parameter
   volumes/df_cache_policy:
     required: false
     default: None
-    choices:
-      - CachedIO
-      - DirectIO
+    choices: [CachedIO, DirectIO]
     description:
       - Default cache policy of the volume. It is an optional parameter
   volumes/boot_enable:
     required: false
     default: None
-    choices:
-      - True
+    choices: [True]
     description:
       - Whether it is the boot device
   volumes/bgi_enable:
     required: false
     default: None
-    choices:
-      - True
-      - False
+    choices: [True, False]
     description:
       - Whether background initialization is enabled
   volumes/access_policy:
     required: false
     default: None
-    choices:
-      - ReadWrite
-      - ReadOnly
-      - Blocked
+    choices: [ReadWrite, ReadOnly, Blocked]
     description:
       - Volume access policy. It is an optional parameter
   volumes/ssd_cache_enable:
     required: false
     default: None
-    choices:
-      - True
-      - False
+    choices: [True, False]
     description:
       - Whether the CacheCade volume is used as the cache
   volumes/disk_cache_policy:
     required: false
     default: None
-    choices:
-      - Unchanged
-      - Enabled
-      - Disabled
+    choices: [Unchanged, Enabled, Disabled]
     description:
       - Cache policy for member disks. It is an optional parameter
 """
@@ -161,6 +137,16 @@ EXAMPLES = """
 RETURNS = """
     {"result": True, "msg": "Modify RAID configuration successful!"}
 """
+
+from ansible.module_utils.basic import AnsibleModule
+
+from ibmc_ansible.ibmc_redfish_api.redfish_base import IbmcBaseConnect
+from ibmc_ansible.ibmc_redfish_api.api_manage_raid import modify_raid
+from ibmc_ansible.ibmc_logger import report
+from ibmc_ansible.ibmc_logger import log
+from ibmc_ansible.utils import is_support_server
+from ibmc_ansible.utils import ansible_ibmc_run_module
+from ibmc_ansible.utils import SERVERTYPE
 
 
 def ibmc_modify_raid_module(module):

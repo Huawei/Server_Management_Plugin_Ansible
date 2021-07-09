@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# Copyright (C) 2019 Huawei Technologies Co., Ltd. All rights reserved.
+# Copyright (C) 2019-2021 Huawei Technologies Co., Ltd. All rights reserved.
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License v3.0+
 
@@ -10,27 +10,27 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License v3.0+ for more detail
 
-
 ANSIBLE_METADATA = {'metadata_version': '1.1',
                     'status': ['preview'],
                     'supported_by': 'community'}
 
-DOCUMENTATION = """
+DOCUMENTATION = r'''
+---
 module: ibmc_ansible_show_version
-short_description: "Huawei iBMC ansible modules 2.0.5"
+short_description: Show Huawei iBMC ansible modules version
 version_added: "2.5.0"
-description: "Huawei iBMC ansible modules 2.0.5"
-"""
+description:
+    - Show Huawei iBMC ansible modules version
+'''
 
-EXAMPLES = r"""
-    - name:show ibmc version 
-          ibmc_show_version:
-         
-"""
+EXAMPLES = r'''
+- name: show Huawei iBMC ansible modules version
+  ibmc_ansible_show_version:
+'''
 
-RETURNS = """
-    Huawei iBMC ansible modules 2.0.5
-"""
+RETURNS = r'''
+    "msg": Huawei iBMC ansible modules version is 2.0.6
+'''
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -39,7 +39,7 @@ def main():
     module = AnsibleModule(
         argument_spec={},
         supports_check_mode=False)
-    module.exit_json(msg="Huawei iBMC ansible modules 2.0.5")
+    module.exit_json(msg="Huawei iBMC ansible modules version is 2.0.6")
 
 
 if __name__ == '__main__':
