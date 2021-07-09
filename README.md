@@ -24,7 +24,7 @@ IV. Software Prerequisites
 
     python: 2.7 or later, 3.7 or later
     python requests: 2.6.0 or later
-    python requests_toolbelt 2.9 or later
+    python requests_toolbelt: 0.9.1 later
     jq: 1.5 or later
     sshpass: 1.06 or later
 	
