@@ -40,7 +40,7 @@ V. Supported Device
     ARM Architecture:
     	TaiShan 200 server (model 2180, 2280, 2280 VE, 2480, 5180, 5280, 5280 VE, 5290) 
     	TaiShan 200K server (model 2280K, 5280K, 2480K) 
-    	TaiShan 200Pro server (model 2480 Pro) 	
+    	TaiShan 200Pro server (model 2480 Pro, 2280 Pro) 	
 	
 VI. Additional Resources
 
